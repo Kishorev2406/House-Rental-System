@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>House Rental System — Tamil Nadu House Rental Management System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.html"><i class="bi bi-house-heart-fill me-2"></i>House <span>Rental System</span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="properties.html">Properties</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+        <li class="nav-item ms-2">
+          <button id="darkModeBtn" class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;width:36px;height:36px;padding:0"></button>
+        </li>
+        <li class="nav-item ms-1" id="navUserArea"></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 hero-content">
+        <div class="hero-badge"><i class="bi bi-geo-alt-fill me-1"></i> #1 House Rental Platform in Tamil Nadu</div>
+        <h1 class="hero-title">Find Your <span>Dream Home</span> Across Tamil Nadu</h1>
+        <p class="hero-sub">Browse thousands of verified rental properties near colleges, hospitals, IT parks & more. All 38 districts covered.</p>
+        <div class="d-flex gap-3 flex-wrap">
+          <a href="properties.html" class="btn btn-primary btn-lg"><i class="bi bi-search me-2"></i>Browse Properties</a>
+          <a href="owner-register.html" class="btn btn-lg" style="background:rgba(255,255,255,0.1);color:#fff;border:2px solid rgba(255,255,255,0.3);border-radius:8px"><i class="bi bi-plus-circle me-2"></i>List Your Property</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat"><h3 id="statProp">500+</h3><p>Properties</p></div>
+          <div class="hero-stat"><h3>38</h3><p>Districts</p></div>
+          <div class="hero-stat"><h3 id="statUsers">2K+</h3><p>Happy Tenants</p></div>
+          <div class="hero-stat"><h3>100%</h3><p>Verified</p></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <!-- SEARCH BOX -->
+        <div class="search-box">
+          <h5><i class="bi bi-search me-2 text-primary"></i>Quick Property Search</h5>
+          <div class="row g-3">
+            <div class="col-12">
+              <select class="form-select" id="searchDistrict">
+                <option value="">All Districts in Tamil Nadu</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <select class="form-select" id="searchType">
+                <option value="">Property Type</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <select class="form-select" id="searchFurnish">
+                <option value="">Furnishing</option>
+                <option>Fully Furnished</option>
+                <option>Semi Furnished</option>
+                <option>Unfurnished</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <input type="number" class="form-control" id="searchMinRent" placeholder="Min Rent (₹)"/>
+            </div>
+            <div class="col-6">
+              <input type="number" class="form-control" id="searchMaxRent" placeholder="Max Rent (₹)"/>
+            </div>
+            <div class="col-6">
+              <select class="form-select" id="searchBeds">
+                <option value="">Bedrooms</option>
+                <option value="1">1 BHK</option>
+                <option value="2">2 BHK</option>
+                <option value="3">3 BHK</option>
+                <option value="4">4+ BHK</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-primary w-100" onclick="doSearch()"><i class="bi bi-search me-1"></i>Search</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PROPERTIES -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Featured Listings</div>
+      <h2 class="section-title">Popular Properties</h2>
+      <p class="section-sub">Hand-picked rental properties across Tamil Nadu</p>
+    </div>
+    <div class="row" id="featuredGrid"></div>
+    <div class="text-center mt-3">
+      <a href="properties.html" class="btn btn-outline-primary btn-lg">View All Properties <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section" style="background:#f8fafc">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Browse By Category</div>
+      <h2 class="section-title">Find Near What Matters</h2>
+      <p class="section-sub">Locate rentals near colleges, hospitals, IT parks & more</p>
+    </div>
+    <div class="row g-3">
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm cursor-pointer" onclick="searchNear('College')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🎓</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">Near Colleges</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm" onclick="searchNear('Hospital')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🏥</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">Near Hospitals</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm" onclick="searchNear('Company')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🏢</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">IT Parks</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm" onclick="searchNear('School')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🏫</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">Near Schools</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm" onclick="searchNear('Bus Stop')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🚌</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">Bus Routes</p>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3 bg-white rounded-3 shadow-sm" onclick="searchNear('Railway Station')" style="cursor:pointer;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:36px;margin-bottom:8px">🚉</div>
+          <p class="mb-0 fw-600" style="font-size:13px;font-weight:600">Railway</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Simple Process</div>
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-sub">Find and rent your home in just 4 easy steps</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon mx-auto" style="background:rgba(37,99,235,0.1)"><i class="bi bi-person-plus-fill" style="color:#2563eb;font-size:28px"></i></div>
+          <h6 class="fw-700 mb-2" style="font-weight:700">1. Register</h6>
+          <p class="text-muted" style="font-size:13px">Create your free account as a tenant or property owner in minutes.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon mx-auto" style="background:rgba(245,158,11,0.1)"><i class="bi bi-search" style="color:#f59e0b;font-size:28px"></i></div>
+          <h6 class="fw-700 mb-2" style="font-weight:700">2. Search</h6>
+          <p class="text-muted" style="font-size:13px">Browse properties by district, rent range, type and nearby amenities.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon mx-auto" style="background:rgba(16,185,129,0.1)"><i class="bi bi-calendar-check" style="color:#10b981;font-size:28px"></i></div>
+          <h6 class="fw-700 mb-2" style="font-weight:700">3. Book</h6>
+          <p class="text-muted" style="font-size:13px">Submit your rental request and get approval from the property owner.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center">
+          <div class="feature-icon mx-auto" style="background:rgba(239,68,68,0.1)"><i class="bi bi-house-check-fill" style="color:#ef4444;font-size:28px"></i></div>
+          <h6 class="fw-700 mb-2" style="font-weight:700">4. Move In</h6>
+          <p class="text-muted" style="font-size:13px">Complete payment online and move into your new home hassle-free.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISTRICTS -->
+<section class="section" style="background:#f8fafc">
+  <div class="container">
+    <div class="text-center mb-4">
+      <div class="section-badge">All 38 Districts</div>
+      <h2 class="section-title">Browse by District</h2>
+    </div>
+    <div id="districtGrid" class="d-flex flex-wrap gap-2 justify-content-center"></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section bg-white">
+  <div class="container">
+    <div class="text-center mb-5">
+      <div class="section-badge">Testimonials</div>
+      <h2 class="section-title">What Our Tenants Say</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"Found my perfect apartment near Anna University within 2 days! The platform is very easy to use and all listings are verified."</p>
+          <div class="author">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">K</div>
+            <div><h6>Karthik Raja</h6><p>Software Engineer, Chennai</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"As a student from Madurai, finding affordable accommodation near my college was a challenge until I found House Rental System. Highly recommended!"</p>
+          <div class="author">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#10b981,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">D</div>
+            <div><h6>Divya Priya</h6><p>Student, Coimbatore</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars">★★★★☆</div>
+          <p>"Listed my properties on House Rental System and got tenants within a week. The admin dashboard makes managing multiple properties very easy."</p>
+          <div class="author">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">R</div>
+            <div><h6>Ramesh Kumar</h6><p>Property Owner, Salem</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background:linear-gradient(135deg,#0f172a,#1e3a5f);padding:70px 0">
+  <div class="container text-center">
+    <h2 style="color:#fff;font-weight:800;font-size:36px">Ready to Find Your New Home?</h2>
+    <p style="color:rgba(255,255,255,0.7);margin:16px 0 32px;font-size:16px">Join thousands of happy tenants across Tamil Nadu</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="user-register.html" class="btn btn-secondary btn-lg"><i class="bi bi-person-plus me-2"></i>Register as Tenant</a>
+      <a href="owner-register.html" class="btn btn-lg" style="background:rgba(255,255,255,0.1);color:#fff;border:2px solid rgba(255,255,255,0.3);border-radius:8px"><i class="bi bi-building me-2"></i>List Your Property</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <h5><i class="bi bi-house-heart-fill me-2"></i>House <span>Rental System</span></h5>
+        <p>Tamil Nadu's premier house rental management platform. Find verified rental properties across all 38 districts.</p>
+        <div class="social-icons mt-3">
+          <a href="#"><i class="bi bi-facebook"></i></a>
+          <a href="#"><i class="bi bi-twitter-x"></i></a>
+          <a href="#"><i class="bi bi-instagram"></i></a>
+          <a href="#"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h5>Quick Links</h5>
+        <ul class="list-unstyled">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="properties.html">Properties</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2 col-md-4">
+        <h5>Account</h5>
+        <ul class="list-unstyled">
+          <li><a href="login.html">Tenant Login</a></li>
+          <li><a href="user-register.html">Register</a></li>
+          <li><a href="login.html">Owner Login</a></li>
+          <li><a href="owner-register.html">Owner Register</a></li>
+          <li><a href="login.html">Admin</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4 col-md-4">
+        <h5>Contact Us</h5>
+        <p><i class="bi bi-geo-alt me-2"></i>123 Anna Salai, Chennai 600002</p>
+        <p><i class="bi bi-telephone me-2"></i>+91 98765 43210</p>
+        <p><i class="bi bi-envelope me-2"></i>support@House Rental System.in</p>
+        <p><i class="bi bi-clock me-2"></i>Mon–Sat: 9:00 AM – 6:00 PM</p>
+      </div>
+    </div>
+    <div class="footer-bottom text-center">
+      <p>© 2025 House Rental System — Tamil Nadu House Rental Management System. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  populateSelect('searchDistrict', TN_DISTRICTS, 'All Districts', true);
+  populateSelect('searchType', PROPERTY_TYPES, 'Property Type');
+
+  // Render featured properties
+  const approved = DB.get('properties').filter(p => p.approved);
+  document.getElementById('featuredGrid').innerHTML = approved.slice(0,6).map(p => propertyCardHTML(p)).join('');
+
+  // District grid
+  const dg = document.getElementById('districtGrid');
+  TN_DISTRICTS.forEach(d => {
+    dg.innerHTML += `<a href="properties.html?district=${encodeURIComponent(d)}" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;color:#0f172a;font-size:12px;border-radius:6px;padding:5px 12px;transition:all 0.2s" onmouseover="this.style.background='#2563eb';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#0f172a'"><i class="bi bi-geo-alt me-1"></i>${d}</a>`;
+  });
+
+  // Nav user area
+  const user = Auth.getUser();
+  const owner = Auth.getOwner();
+  const navArea = document.getElementById('navUserArea');
+  if (user) {
+    navArea.innerHTML = `<div class="dropdown"><button class="btn btn-sm dropdown-toggle" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2)" data-bs-toggle="dropdown"><i class="bi bi-person-circle me-1"></i>${user.name.split(' ')[0]}</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="user-dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#" onclick="Auth.logoutUser()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li></ul></div>`;
+  } else if (owner) {
+    navArea.innerHTML = `<a href="owner-dashboard.html" class="btn btn-sm btn-primary">Owner Panel</a>`;
+  } else {
+    navArea.innerHTML = `<div class="d-flex gap-2"><a href="login.html" class="btn btn-sm btn-outline-primary" style="border-color:rgba(255,255,255,0.4);color:#fff">Login</a><a href="user-register.html" class="btn btn-sm btn-primary">Register</a></div>`;
+  }
+
+  // Stats
+  const props = DB.get('properties');
+  document.getElementById('statProp').textContent = props.length + '+';
+});
+
+function doSearch() {
+  const params = new URLSearchParams();
+  const d = document.getElementById('searchDistrict').value;
+  const t = document.getElementById('searchType').value;
+  const f = document.getElementById('searchFurnish').value;
+  const mn = document.getElementById('searchMinRent').value;
+  const mx = document.getElementById('searchMaxRent').value;
+  const b = document.getElementById('searchBeds').value;
+  if (d) params.set('district', d);
+  if (t) params.set('type', t);
+  if (f) params.set('furnish', f);
+  if (mn) params.set('minRent', mn);
+  if (mx) params.set('maxRent', mx);
+  if (b) params.set('beds', b);
+  window.location.href = 'properties.html?' + params.toString();
+}
+
+function searchNear(type) {
+  window.location.href = 'properties.html?nearby=' + encodeURIComponent(type);
+}
+</script>
+</body>
+</html>

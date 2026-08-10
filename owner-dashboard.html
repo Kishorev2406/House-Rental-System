@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Dashboard — House Rental System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="bi bi-house-heart-fill" style="color:#f59e0b;font-size:24px"></i>
+      <h4>House <span>Rental System</span></h4>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebarAvatar">O</div>
+      <div><h6 id="sidebarName" style="color:#fff;font-size:13px;margin:0">Owner</h6>
+      <p id="sidebarEmail" style="color:rgba(255,255,255,0.5);font-size:11px;margin:0">owner</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="#" onclick="showTab('overview')"    id="nav-overview"    class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <div class="nav-section">Properties</div>
+      <a href="#" onclick="showTab('properties')"  id="nav-properties"><i class="bi bi-buildings"></i> My Properties</a>
+      <a href="#" onclick="openAddModal()"         ><i class="bi bi-plus-circle"></i> Add Property</a>
+      <div class="nav-section">Bookings</div>
+      <a href="#" onclick="showTab('requests')"    id="nav-requests"><i class="bi bi-calendar-check"></i> Booking Requests <span class="badge-count" id="reqBadge">0</span></a>
+      <a href="#" onclick="showTab('allbookings')" id="nav-allbookings"><i class="bi bi-list-check"></i> All Bookings</a>
+      <div class="nav-section">Account</div>
+      <a href="#" onclick="showTab('profile')"     id="nav-profile"><i class="bi bi-person-circle"></i> My Profile</a>
+      <a href="#" onclick="showTab('password')"    id="nav-password"><i class="bi bi-shield-lock"></i> Change Password</a>
+      <div class="nav-section">Other</div>
+      <a href="index.html"><i class="bi bi-house"></i> View Site</a>
+      <a href="#" onclick="Auth.logoutOwner()" style="color:#ef4444"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div><h4 id="pageTitle">Dashboard</h4><p class="text-muted" style="font-size:13px;margin:0" id="pageSubtitle">Owner Control Panel</p></div>
+      <div class="d-flex gap-2">
+        <button id="darkModeBtn" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;width:36px;height:36px;padding:0;border-radius:8px"></button>
+        <button class="btn btn-sm d-lg-none" id="sidebarToggle" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px"><i class="bi bi-list" style="font-size:18px"></i></button>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg me-1"></i>Add Property</button>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(37,99,235,0.1)"><i class="bi bi-buildings" style="color:#2563eb;font-size:22px"></i></div>
+            <div class="info"><h3 id="statProps">0</h3><p>My Properties</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(16,185,129,0.1)"><i class="bi bi-house-check" style="color:#10b981;font-size:22px"></i></div>
+            <div class="info"><h3 id="statAvail">0</h3><p>Available</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(245,158,11,0.1)"><i class="bi bi-hourglass-split" style="color:#f59e0b;font-size:22px"></i></div>
+            <div class="info"><h3 id="statPending">0</h3><p>Pending Requests</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(139,92,246,0.1)"><i class="bi bi-calendar-check" style="color:#8b5cf6;font-size:22px"></i></div>
+            <div class="info"><h3 id="statBooked">0</h3><p>Total Bookings</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending requests alert -->
+      <div id="pendingAlert"></div>
+
+      <!-- Recent requests -->
+      <div class="data-table-wrap mb-4">
+        <div class="table-header">
+          <h6><i class="bi bi-clock-history me-2"></i>Pending Booking Requests</h6>
+          <button class="btn btn-outline-primary btn-sm" onclick="showTab('requests')">View All</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>User</th><th>Property</th><th>Move-in</th><th>Duration</th><th>Rent/Mo</th><th>Action</th></tr></thead>
+            <tbody id="overviewRequests"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- My properties summary -->
+      <div class="data-table-wrap">
+        <div class="table-header">
+          <h6><i class="bi bi-buildings me-2"></i>My Properties</h6>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add New</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Name</th><th>District</th><th>Rent</th><th>Status</th><th>Admin Approval</th><th>Actions</th></tr></thead>
+            <tbody id="overviewProps"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTIES TAB -->
+    <div id="tab-properties" style="display:none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0">My Properties</h6>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg me-1"></i>Add Property</button>
+      </div>
+      <div class="row g-3" id="propsGrid"></div>
+    </div>
+
+    <!-- BOOKING REQUESTS TAB -->
+    <div id="tab-requests" style="display:none">
+      <h6 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Booking Requests from Users</h6>
+      <div id="requestCards"></div>
+    </div>
+
+    <!-- ALL BOOKINGS TAB -->
+    <div id="tab-allbookings" style="display:none">
+      <div class="data-table-wrap">
+        <div class="table-header"><h6><i class="bi bi-list-check me-2"></i>All Bookings</h6></div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>User</th><th>Property</th><th>Date</th><th>Duration</th><th>Rent</th><th>Owner Status</th><th>Admin Status</th><th>Payment</th></tr></thead>
+            <tbody id="allBookingsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="tab-profile" style="display:none">
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="chart-card">
+            <h6 class="fw-bold mb-4">Edit Profile</h6>
+            <div id="profileAlert"></div>
+            <form id="profileForm">
+              <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" id="pName"/></div>
+                <div class="col-md-6"><label class="form-label">Phone</label><input type="tel" class="form-control" id="pPhone" maxlength="10"/></div>
+                <div class="col-md-6"><label class="form-label">Email (read only)</label><input type="email" class="form-control" id="pEmail" readonly style="background:#f8fafc"/></div>
+                <div class="col-md-6"><label class="form-label">District</label><select class="form-select" id="pDistrict"></select></div>
+                <div class="col-12"><label class="form-label">Address</label><input type="text" class="form-control" id="pAddress"/></div>
+                <div class="col-12"><button type="submit" class="btn btn-primary">Save Changes</button></div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORD TAB -->
+    <div id="tab-password" style="display:none">
+      <div class="row"><div class="col-lg-5">
+        <div class="chart-card">
+          <h6 class="fw-bold mb-4">Change Password</h6>
+          <div id="pwdAlert"></div>
+          <form id="pwdForm">
+            <div class="mb-3"><label class="form-label">Current Password</label>
+              <div class="input-group"><input type="password" class="form-control" id="oldPwd"/><button type="button" class="input-group-text" onclick="tp('oldPwd','oi')"><i class="bi bi-eye-slash" id="oi"></i></button></div>
+            </div>
+            <div class="mb-3"><label class="form-label">New Password</label>
+              <div class="input-group"><input type="password" class="form-control" id="newPwd"/><button type="button" class="input-group-text" onclick="tp('newPwd','ni')"><i class="bi bi-eye-slash" id="ni"></i></button></div>
+            </div>
+            <div class="mb-4"><label class="form-label">Confirm Password</label>
+              <div class="input-group"><input type="password" class="form-control" id="confPwd"/><button type="button" class="input-group-text" onclick="tp('confPwd','ci')"><i class="bi bi-eye-slash" id="ci"></i></button></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Password</button>
+          </form>
+        </div>
+      </div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD / EDIT PROPERTY MODAL -->
+<div class="modal fade" id="propModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="propModalTitle">Add New Property</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="propModalAlert"></div>
+        <form id="propForm">
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label">Property Name *</label><input type="text" class="form-control" id="fName" required/></div>
+            <div class="col-md-6"><label class="form-label">Property Type *</label><select class="form-select" id="fType" required></select></div>
+            <div class="col-md-6"><label class="form-label">Furnishing *</label>
+              <select class="form-select" id="fFurnish"><option>Fully Furnished</option><option>Semi Furnished</option><option>Unfurnished</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label">District *</label><select class="form-select" id="fDistrict" required></select></div>
+            <div class="col-md-6"><label class="form-label">City *</label><input type="text" class="form-control" id="fCity" required/></div>
+            <div class="col-12"><label class="form-label">Full Address *</label><input type="text" class="form-control" id="fAddress" required/></div>
+            <div class="col-md-6"><label class="form-label">Pincode</label><input type="text" class="form-control" id="fPincode" maxlength="6"/></div>
+            <div class="col-md-6"><label class="form-label">Monthly Rent (₹) *</label><input type="number" class="form-control" id="fRent" required/></div>
+            <div class="col-md-6"><label class="form-label">Security Deposit (₹) *</label><input type="number" class="form-control" id="fDeposit" required/></div>
+            <div class="col-md-3"><label class="form-label">Bedrooms</label><input type="number" class="form-control" id="fBed" min="1" value="1"/></div>
+            <div class="col-md-3"><label class="form-label">Bathrooms</label><input type="number" class="form-control" id="fBath" min="1" value="1"/></div>
+            <div class="col-md-3"><label class="form-label">Parking</label><select class="form-select" id="fParking"><option value="1">Yes</option><option value="0">No</option></select></div>
+            <div class="col-md-3"><label class="form-label">Internet</label><select class="form-select" id="fInternet"><option value="1">Yes</option><option value="0">No</option></select></div>
+            <div class="col-md-6"><label class="form-label">Water Supply</label><select class="form-select" id="fWater"><option value="1">Yes</option><option value="0">No</option></select></div>
+            <div class="col-md-6"><label class="form-label">Electricity</label><select class="form-select" id="fElec"><option value="1">Yes</option><option value="0">No</option></select></div>
+            <div class="col-12" id="foodRow" style="display:none">
+              <label class="form-label">🍽️ Food Available <small class="text-muted">(For PG/Hostel only)</small></label>
+              <select class="form-select" id="fFood">
+                <option value="none">No Food</option>
+                <option value="breakfast">Breakfast Only</option>
+                <option value="lunch">Lunch Only</option>
+                <option value="dinner">Dinner Only</option>
+                <option value="breakfast_dinner">Breakfast + Dinner</option>
+                <option value="all">All Meals (Breakfast + Lunch + Dinner)</option>
+              </select>
+            </div>
+            <div class="col-12"><label class="form-label">Property Image URL</label><input type="text" class="form-control" id="fImg" placeholder="https://..."/></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea class="form-control" id="fDesc" rows="3"></textarea></div>
+            <div class="col-12">
+              <label class="form-label">Nearby Places <small class="text-muted">(Name|Type|Distance — one per line)</small></label>
+              <textarea class="form-control" id="fNearby" rows="3" placeholder="Anna University|College|0.5km&#10;Apollo Hospital|Hospital|1km"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveProp()"><i class="bi bi-check-lg me-1"></i>Save Property</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+let currentOwner, editingPropId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.requireOwner();
+  currentOwner = Auth.getOwner();
+  document.getElementById('sidebarName').textContent  = currentOwner.name;
+  document.getElementById('sidebarEmail').textContent = currentOwner.email;
+  document.getElementById('sidebarAvatar').textContent = currentOwner.name.charAt(0).toUpperCase();
+
+  populateSelect('fType', PROPERTY_TYPES, 'Select Type');
+  populateSelect('fDistrict', TN_DISTRICTS, 'Select District');
+  populateSelect('pDistrict', TN_DISTRICTS, 'Select District');
+
+  // Show food option only for PG/Hostel
+  document.getElementById('fType').addEventListener('change', function() {
+    document.getElementById('foodRow').style.display = this.value === 'PG/Hostel' ? 'block' : 'none';
+  });
+
+  loadOverview();
+  updateReqBadge();
+});
+
+function updateReqBadge() {
+  const myProps = DB.get('properties').filter(p => p.ownerId == currentOwner.id).map(p => p.id);
+  const pending = DB.get('bookings').filter(b => myProps.includes(b.propertyId) && (b.ownerStatus === 'Pending' || !b.ownerStatus)).length;
+  document.getElementById('reqBadge').textContent = pending || '';
+}
+
+// ---- OVERVIEW ----
+function loadOverview() {
+  const myProps   = DB.get('properties').filter(p => p.ownerId == currentOwner.id);
+  const myPropIds = myProps.map(p => p.id);
+  const myBooks   = DB.get('bookings').filter(b => myPropIds.includes(b.propertyId));
+  const pending   = myBooks.filter(b => (b.ownerStatus === 'Pending' || !b.ownerStatus)).length;
+
+  document.getElementById('statProps').textContent   = myProps.length;
+  document.getElementById('statAvail').textContent   = myProps.filter(p => p.status === 'Available').length;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statBooked').textContent  = myBooks.length;
+
+  if (pending > 0) {
+    document.getElementById('pendingAlert').innerHTML = `
+      <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
+        <span><i class="bi bi-hourglass-split me-2"></i><strong>${pending} booking request(s)</strong> waiting for your approval.</span>
+        <button class="btn btn-warning btn-sm" onclick="showTab('requests')">Review Now →</button>
+      </div>`;
+  } else {
+    document.getElementById('pendingAlert').innerHTML = '';
+  }
+
+  // Overview requests table
+  const pendingBooks = myBooks.filter(b => b.ownerStatus === 'Pending' || !b.ownerStatus).slice(0, 5);
+  const rt = document.getElementById('overviewRequests');
+  rt.innerHTML = pendingBooks.length ? pendingBooks.map(b => {
+    const user = DB.getById('users', b.userId);
+    return `<tr>
+      <td>${user ? user.name : 'User'}</td>
+      <td>${b.propertyName}</td>
+      <td>${b.startDate}</td>
+      <td>${b.duration} months</td>
+      <td>${formatINR(b.rentPerMonth)}</td>
+      <td>
+        <button class="btn btn-success btn-sm me-1" onclick="approveRequest(${b.id})">✅ Approve</button>
+        <button class="btn btn-danger btn-sm"  onclick="rejectRequest(${b.id})">❌ Reject</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="text-center py-3 text-muted">No pending requests</td></tr>';
+
+  // Overview props table
+  const op = document.getElementById('overviewProps');
+  op.innerHTML = myProps.length ? myProps.map(p => `<tr>
+    <td><strong>${p.name}</strong></td>
+    <td>${p.district}</td>
+    <td>${formatINR(p.rent)}/mo</td>
+    <td><span class="avail-badge ${p.status==='Available'?'avail-yes':'avail-no'}">${p.status}</span></td>
+    <td><span class="avail-badge ${p.approved?'avail-yes':'avail-pending'}">${p.approved?'✅ Approved':'⏳ Pending Admin'}</span></td>
+    <td>
+      <button class="btn btn-outline-primary btn-sm me-1" onclick="editProp(${p.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-outline-danger btn-sm" onclick="deleteProp(${p.id})"><i class="bi bi-trash"></i></button>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="6" class="text-center py-3 text-muted">No properties yet. <a href="#" onclick="openAddModal()">Add one</a></td></tr>';
+}
+
+// ---- PROPERTIES GRID ----
+function loadPropsGrid() {
+  const myProps = DB.get('properties').filter(p => p.ownerId == currentOwner.id);
+  const grid = document.getElementById('propsGrid');
+  if (!myProps.length) {
+    grid.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="bi bi-buildings" style="font-size:48px"></i><p class="mt-2">No properties added yet.</p><button class="btn btn-primary btn-sm" onclick="openAddModal()">Add Property</button></div>';
+    return;
+  }
+  grid.innerHTML = myProps.map(p => `
+    <div class="col-md-6 col-xl-4">
+      <div class="property-card">
+        <div class="img-wrap">
+          <img src="${p.images[0]}" onerror="this.src='https://via.placeholder.com/400x200?text=Property'" alt="${p.name}"/>
+          <span class="badge-status ${p.status==='Available'?'badge-available':'badge-rented'}">${p.status}</span>
+        </div>
+        <div class="card-body">
+          <div class="price">${formatINR(p.rent)}<span>/month</span></div>
+          <h5 class="prop-title">${p.name}</h5>
+          <p class="prop-location"><i class="bi bi-geo-alt"></i>${p.address}</p>
+          <div class="prop-features">
+            <span><i class="bi bi-door-open"></i>${p.bedrooms} Bed</span>
+            <span><i class="bi bi-droplet"></i>${p.bathrooms} Bath</span>
+            <span><i class="bi bi-tag"></i>${p.furnished}</span>
+          </div>
+          <div class="mt-2">
+            ${p.type === 'PG/Hostel' && p.food && p.food !== 'none' ? `<span style="background:rgba(16,185,129,0.1);color:#059669;border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">🍽️ Food: ${foodLabel(p.food)}</span>` : ''}
+            <span class="avail-badge ${p.approved?'avail-yes':'avail-pending'}" style="font-size:11px">${p.approved?'✅ Admin Approved':'⏳ Awaiting Admin Approval'}</span>
+          </div>
+        </div>
+        <div class="card-footer-btns">
+          <button class="btn btn-outline-primary btn-sm flex-fill" onclick="editProp(${p.id})"><i class="bi bi-pencil me-1"></i>Edit</button>
+          <button class="btn btn-outline-danger btn-sm flex-fill" onclick="deleteProp(${p.id})"><i class="bi bi-trash me-1"></i>Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---- BOOKING REQUESTS ----
+function loadRequests() {
+  const myPropIds = DB.get('properties').filter(p => p.ownerId == currentOwner.id).map(p => p.id);
+  const bookings  = DB.get('bookings').filter(b => myPropIds.includes(b.propertyId)).reverse();
+
+  const container = document.getElementById('requestCards');
+  if (!bookings.length) {
+    container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-calendar-x" style="font-size:48px"></i><p class="mt-2">No booking requests yet.</p></div>';
+    return;
+  }
+
+  container.innerHTML = bookings.map(b => {
+    const user = DB.getById('users', b.userId);
+    const ownerStatus = b.ownerStatus || 'Pending';
+    const adminStatus  = b.status || 'Pending';
+    return `
+    <div class="data-table-wrap mb-3 p-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+          <h6 class="fw-bold mb-1">${b.propertyName}</h6>
+          <small class="text-muted">
+            <i class="bi bi-person me-1"></i>${user ? user.name : 'User'} &bull;
+            ${user ? `<i class="bi bi-telephone me-1"></i>${user.phone} &bull;` : ''}
+            <i class="bi bi-calendar me-1"></i>Submitted: ${b.bookingDate} &bull;
+            Move-in: ${b.startDate} &bull; ${b.duration} months
+          </small>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <span class="avail-badge ${ownerStatus==='Approved'?'avail-yes':ownerStatus==='Rejected'?'avail-no':'avail-pending'}">Owner: ${ownerStatus==='Approved'?'✅ Approved':ownerStatus==='Rejected'?'❌ Rejected':'⏳ Pending'}</span>
+          <span class="avail-badge ${adminStatus==='Approved'?'avail-yes':adminStatus==='Rejected'?'avail-no':'avail-pending'}">Admin: ${adminStatus==='Approved'?'✅ Approved':adminStatus==='Rejected'?'❌ Rejected':'⏳ Pending'}</span>
+        </div>
+      </div>
+      <div class="row g-2 mb-2" style="font-size:13px">
+        <div class="col-md-3"><span class="text-muted">Rent/Month:</span> <strong>${formatINR(b.rentPerMonth)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">Deposit:</span> <strong>${formatINR(b.deposit||0)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">Total:</span> <strong>${formatINR(b.totalAmount)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">Payment:</span> <strong>${b.paymentStatus||'Pending'}</strong></div>
+      </div>
+      ${ownerStatus === 'Pending' ? `
+      <div class="alert alert-warning py-2 px-3 mb-2" style="font-size:12px">
+        <i class="bi bi-hourglass-split me-1"></i>This request is waiting for your approval. Once you approve, it will go to Admin for final approval.
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" onclick="approveRequest(${b.id})"><i class="bi bi-check-circle me-1"></i>Approve</button>
+        <button class="btn btn-danger btn-sm"  onclick="rejectRequest(${b.id})"><i class="bi bi-x-circle me-1"></i>Reject</button>
+      </div>` : ''}
+      ${ownerStatus === 'Approved' && adminStatus === 'Pending' ? '<div class="alert alert-info py-2 px-3 mb-0" style="font-size:12px"><i class="bi bi-arrow-right-circle me-1"></i>You approved. Waiting for Admin final approval.</div>' : ''}
+      ${ownerStatus === 'Approved' && adminStatus === 'Approved' ? '<div class="alert alert-success py-2 px-3 mb-0" style="font-size:12px"><i class="bi bi-check-circle me-1"></i>Fully approved. Waiting for user payment.</div>' : ''}
+      ${ownerStatus === 'Rejected' ? '<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:12px"><i class="bi bi-x-circle me-1"></i>You rejected this request.</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- APPROVE / REJECT ----
+function approveRequest(id) {
+  // Owner approves → status changes to OwnerApproved, goes to admin queue
+  DB.update('bookings', id, { ownerStatus: 'Approved', status: 'Pending' });
+  showToast('Request approved! Sent to Admin for final approval. ✅');
+  loadOverview();
+  updateReqBadge();
+  loadRequests();
+}
+
+function rejectRequest(id) {
+  if (!confirm('Reject this booking request?')) return;
+  DB.update('bookings', id, { ownerStatus: 'Rejected', status: 'Rejected' });
+  showToast('Request rejected.', 'error');
+  loadOverview();
+  updateReqBadge();
+  loadRequests();
+}
+
+// ---- ALL BOOKINGS ----
+function loadAllBookings() {
+  const myPropIds = DB.get('properties').filter(p => p.ownerId == currentOwner.id).map(p => p.id);
+  const bookings  = DB.get('bookings').filter(b => myPropIds.includes(b.propertyId)).reverse();
+  const tbody = document.getElementById('allBookingsTbody');
+  tbody.innerHTML = bookings.length ? bookings.map(b => {
+    const user = DB.getById('users', b.userId);
+    return `<tr>
+      <td>${user ? user.name : 'User'}</td>
+      <td>${b.propertyName}</td>
+      <td>${b.bookingDate}</td>
+      <td>${b.duration} mo</td>
+      <td>${formatINR(b.rentPerMonth)}</td>
+      <td><span class="avail-badge ${b.ownerStatus==='Approved'?'avail-yes':b.ownerStatus==='Rejected'?'avail-no':'avail-pending'}">${b.ownerStatus||'Pending'}</span></td>
+      <td><span class="avail-badge ${b.status==='Approved'?'avail-yes':b.status==='Rejected'?'avail-no':'avail-pending'}">${b.status||'Pending'}</span></td>
+      <td><span class="avail-badge ${b.paymentStatus==='Paid'?'avail-yes':'avail-pending'}">${b.paymentStatus||'Pending'}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="text-center py-3 text-muted">No bookings yet.</td></tr>';
+}
+
+// ---- ADD / EDIT PROPERTY ----
+function openAddModal() {
+  editingPropId = null;
+  document.getElementById('propModalTitle').textContent = 'Add New Property';
+  document.getElementById('propForm').reset();
+  document.getElementById('propModalAlert').innerHTML = '';
+  new bootstrap.Modal(document.getElementById('propModal')).show();
+}
+
+function editProp(id) {
+  const p = DB.getById('properties', id);
+  if (!p) return;
+  editingPropId = id;
+  document.getElementById('propModalTitle').textContent = 'Edit Property';
+  document.getElementById('fName').value    = p.name;
+  document.getElementById('fType').value    = p.type;
+  document.getElementById('fFurnish').value = p.furnished;
+  document.getElementById('fDistrict').value= p.district;
+  document.getElementById('fCity').value    = p.city || '';
+  document.getElementById('fAddress').value = p.address;
+  document.getElementById('fPincode').value = p.pincode || '';
+  document.getElementById('fRent').value    = p.rent;
+  document.getElementById('fDeposit').value = p.deposit;
+  document.getElementById('fBed').value     = p.bedrooms;
+  document.getElementById('fBath').value    = p.bathrooms;
+  document.getElementById('fParking').value = p.parking ? '1' : '0';
+  document.getElementById('fInternet').value= p.internet ? '1' : '0';
+  document.getElementById('fWater').value   = p.water ? '1' : '0';
+  document.getElementById('fElec').value    = p.electricity ? '1' : '0';
+  document.getElementById('fImg').value     = p.images[0] || '';
+  document.getElementById('fDesc').value    = p.description;
+  document.getElementById('fNearby').value  = (p.nearby||[]).map(n=>`${n.name}|${n.type}|${n.dist}`).join('\n');
+  // Show food field if PG/Hostel
+  const foodRow = document.getElementById('foodRow');
+  if (p.type === 'PG/Hostel') {
+    foodRow.style.display = 'block';
+    document.getElementById('fFood').value = p.food || 'none';
+  } else {
+    foodRow.style.display = 'none';
+  }
+  document.getElementById('propModalAlert').innerHTML = '';
+  new bootstrap.Modal(document.getElementById('propModal')).show();
+}
+
+function saveProp() {
+  const name    = document.getElementById('fName').value.trim();
+  const district= document.getElementById('fDistrict').value;
+  const rent    = parseInt(document.getElementById('fRent').value);
+  const deposit = parseInt(document.getElementById('fDeposit').value);
+  const al = document.getElementById('propModalAlert');
+
+  if (!name || !district || !rent || !deposit) {
+    al.innerHTML = '<div class="alert alert-danger">Please fill all required fields.</div>';
+    return;
+  }
+
+  const nearby = document.getElementById('fNearby').value.trim()
+    .split('\n').filter(Boolean).map(s => {
+      const [name, type, dist] = s.split('|').map(x => x.trim());
+      return { name: name||'', type: type||'', dist: dist||'' };
+    });
+
+  const data = {
+    name, type: document.getElementById('fType').value,
+    furnished:   document.getElementById('fFurnish').value,
+    district,    city:        document.getElementById('fCity').value.trim(),
+    address:     document.getElementById('fAddress').value.trim(),
+    pincode:     document.getElementById('fPincode').value.trim(),
+    rent,        deposit,
+    bedrooms:    parseInt(document.getElementById('fBed').value) || 1,
+    bathrooms:   parseInt(document.getElementById('fBath').value) || 1,
+    parking:     document.getElementById('fParking').value === '1',
+    internet:    document.getElementById('fInternet').value === '1',
+    water:       document.getElementById('fWater').value === '1',
+    electricity: document.getElementById('fElec').value === '1',
+    images:      [document.getElementById('fImg').value || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80'],
+    description: document.getElementById('fDesc').value.trim(),
+    nearby,
+    status:      'Available',
+    food:        document.getElementById('fType').value === 'PG/Hostel' ? document.getElementById('fFood').value : 'none',
+    approved:    false,   // Admin must approve before visible to users
+    ownerId:     currentOwner.id,
+    ownerName:   currentOwner.name,
+    rating:      0, reviews: 0,
+    createdAt:   new Date().toLocaleDateString('en-IN')
+  };
+
+  if (editingPropId) {
+    DB.update('properties', editingPropId, data);
+    showToast('Property updated! ✅');
+  } else {
+    data.id = Date.now();
+    DB.add('properties', data);
+    showToast('Property added! Waiting for Admin approval. ⏳', 'info');
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('propModal')).hide();
+  loadOverview();
+  if (document.getElementById('tab-properties').style.display !== 'none') loadPropsGrid();
+}
+
+function deleteProp(id) {
+  if (!confirm('Delete this property?')) return;
+  DB.remove('properties', id);
+  showToast('Property deleted.', 'error');
+  loadOverview();
+  loadPropsGrid();
+}
+
+// ---- PROFILE ----
+function loadProfile() {
+  document.getElementById('pName').value    = currentOwner.name || '';
+  document.getElementById('pEmail').value   = currentOwner.email || '';
+  document.getElementById('pPhone').value   = currentOwner.phone || '';
+  document.getElementById('pDistrict').value= currentOwner.district || '';
+  document.getElementById('pAddress').value = currentOwner.address || '';
+}
+
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const updates = {
+    name:     document.getElementById('pName').value.trim(),
+    phone:    document.getElementById('pPhone').value.trim(),
+    district: document.getElementById('pDistrict').value,
+    address:  document.getElementById('pAddress').value.trim()
+  };
+  DB.update('owners', currentOwner.id, updates);
+  currentOwner = { ...currentOwner, ...updates };
+  Auth.setOwner(currentOwner);
+  document.getElementById('sidebarName').textContent  = currentOwner.name;
+  document.getElementById('sidebarAvatar').textContent = currentOwner.name.charAt(0);
+  document.getElementById('profileAlert').innerHTML = '<div class="alert alert-success">Profile updated!</div>';
+});
+
+document.getElementById('pwdForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const oldPwd = document.getElementById('oldPwd').value;
+  const newPwd = document.getElementById('newPwd').value;
+  const confPwd= document.getElementById('confPwd').value;
+  const al = document.getElementById('pwdAlert');
+  if (oldPwd !== currentOwner.password) { al.innerHTML = '<div class="alert alert-danger">Current password incorrect.</div>'; return; }
+  if (newPwd.length < 6)               { al.innerHTML = '<div class="alert alert-danger">Min 6 characters.</div>'; return; }
+  if (newPwd !== confPwd)              { al.innerHTML = '<div class="alert alert-danger">Passwords do not match.</div>'; return; }
+  DB.update('owners', currentOwner.id, { password: newPwd });
+  currentOwner.password = newPwd;
+  Auth.setOwner(currentOwner);
+  al.innerHTML = '<div class="alert alert-success">Password updated!</div>';
+  document.getElementById('pwdForm').reset();
+});
+
+function foodLabel(val) {
+  const map = {
+    none: 'No Food',
+    breakfast: 'Breakfast Only',
+    lunch: 'Lunch Only',
+    dinner: 'Dinner Only',
+    breakfast_dinner: 'Breakfast + Dinner',
+    all: 'All Meals'
+  };
+  return map[val] || val;
+}
+
+function tp(id, icoId) {
+  const f = document.getElementById(id);
+  const i = document.getElementById(icoId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+// ---- TAB SWITCHER ----
+const TABS = ['overview','properties','requests','allbookings','profile','password'];
+function showTab(name) {
+  TABS.forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+    const n = document.getElementById('nav-' + t);
+    if (n) n.classList.remove('active');
+  });
+  document.getElementById('tab-' + name).style.display = 'block';
+  const n = document.getElementById('nav-' + name);
+  if (n) n.classList.add('active');
+  const titles = { overview:'Dashboard', properties:'My Properties', requests:'Booking Requests', allbookings:'All Bookings', profile:'My Profile', password:'Change Password' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+  if (name === 'properties')  loadPropsGrid();
+  if (name === 'requests')    loadRequests();
+  if (name === 'allbookings') loadAllBookings();
+  if (name === 'profile')     loadProfile();
+}
+</script>
+</body>
+</html>

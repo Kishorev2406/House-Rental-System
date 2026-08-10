@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile — House Rental System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <a class="logo" href="index.html">🏠 <span>TN</span>Rentals</a>
+  <ul>
+    <li><a href="user-dashboard.html">Browse</a></li>
+    <li><a href="payment.html">Payments</a></li>
+    <li><a href="#" onclick="logoutUser()">Logout</a></li>
+  </ul>
+</nav>
+
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="user-info">
+      <div class="avatar">👤</div>
+      <h4 id="sName">User</h4>
+      <p id="sEmail">email</p>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="user-dashboard.html"><span class="icon">🏠</span> Browse Houses</a></li>
+      <li><a href="payment.html"><span class="icon">💳</span> My Payments</a></li>
+      <li><a href="user-profile.html" class="active"><span class="icon">👤</span> My Profile</a></li>
+      <li><a href="#" onclick="logoutUser()"><span class="icon">🚪</span> Logout</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    <h2 style="color:var(--dark);margin-bottom:20px">👤 My Profile</h2>
+    <div style="max-width:500px">
+      <div id="alertBox"></div>
+      <div style="background:var(--white);padding:24px;border-radius:10px;box-shadow:var(--shadow)">
+        <form id="profileForm">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="pName" required/>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="pEmail" readonly style="background:#f4f4f4;cursor:not-allowed"/>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="pPhone" maxlength="10"/>
+          </div>
+          <div class="form-group">
+            <label>Preferred District</label>
+            <select id="pDistrict"></select>
+          </div>
+          <hr class="divider"/>
+          <h4 style="margin-bottom:12px;color:var(--dark)">Change Password</h4>
+          <div class="form-group">
+            <label>New Password (leave blank to keep current)</label>
+            <input type="password" id="pPass" placeholder="New password"/>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="pPassC" placeholder="Confirm new password"/>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'user-login.html'; return; }
+
+    populateDistricts('pDistrict');
+    document.getElementById('sName').textContent = user.name;
+    document.getElementById('sEmail').textContent = user.email;
+    document.getElementById('pName').value = user.name;
+    document.getElementById('pEmail').value = user.email;
+    document.getElementById('pPhone').value = user.phone || '';
+    document.getElementById('pDistrict').value = user.district || '';
+  });
+
+  document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = getCurrentUser();
+    const newPass = document.getElementById('pPass').value;
+    const confPass = document.getElementById('pPassC').value;
+
+    if (newPass && newPass !== confPass) {
+      document.getElementById('alertBox').innerHTML = '<div class="alert alert-error">❌ Passwords do not match</div>';
+      return;
+    }
+
+    const users = getUsers();
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx > -1) {
+      users[idx].name = document.getElementById('pName').value.trim();
+      users[idx].phone = document.getElementById('pPhone').value.trim();
+      users[idx].district = document.getElementById('pDistrict').value;
+      if (newPass) users[idx].password = newPass;
+      localStorage.setItem('hrs_users', JSON.stringify(users));
+      setCurrentUser(users[idx]);
+      document.getElementById('sName').textContent = users[idx].name;
+      document.getElementById('alertBox').innerHTML = '<div class="alert alert-success">✅ Profile updated successfully!</div>';
+    }
+  });
+</script>
+</body>
+</html>

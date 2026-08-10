@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — House Rental System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="dashboard-wrapper">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="bi bi-house-heart-fill" style="color:#f59e0b;font-size:24px"></i>
+      <h4>House <span>Rental System</span></h4>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar">🔐</div>
+      <div><h6 style="color:#fff;font-size:13px;margin:0">Administrator</h6><p style="color:rgba(255,255,255,0.5);font-size:11px;margin:0">admin@hrs.com</p></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="#" onclick="showSec('overview')"  id="nav-overview"  class="active"><i class="bi bi-speedometer2"></i> Overview</a>
+      <a href="#" onclick="showSec('bookings')"  id="nav-bookings"><i class="bi bi-calendar-check"></i> Booking Requests <span class="badge-count" id="pendingBadge">0</span></a>
+      <div class="nav-section">Manage</div>
+      <a href="#" onclick="showSec('properties')" id="nav-properties"><i class="bi bi-buildings"></i> Properties</a>
+      <a href="#" onclick="showSec('users')"      id="nav-users"><i class="bi bi-people"></i> Users</a>
+      <a href="#" onclick="showSec('payments')"   id="nav-payments"><i class="bi bi-credit-card"></i> Payments</a>
+      <a href="#" onclick="showSec('districts')"  id="nav-districts"><i class="bi bi-geo-alt"></i> Districts</a>
+      <div class="nav-section">Other</div>
+      <a href="index.html"><i class="bi bi-house"></i> View Site</a>
+      <a href="#" onclick="Auth.logoutAdmin()" style="color:#ef4444"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div><h4 id="pageTitle">Overview</h4><p id="pageSubtitle" class="text-muted" style="font-size:13px;margin:0">Admin Control Panel</p></div>
+      <div class="d-flex gap-2">
+        <button id="darkModeBtn" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;width:36px;height:36px;padding:0;border-radius:8px"></button>
+        <button class="btn btn-sm d-lg-none" id="sidebarToggle" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px"><i class="bi bi-list" style="font-size:18px"></i></button>
+        <a href="index.html" class="btn btn-outline-primary btn-sm">View Site</a>
+      </div>
+    </div>
+
+    <!-- ===== OVERVIEW ===== -->
+    <div id="sec-overview">
+      <div class="row g-3 mb-4" id="statsGrid"></div>
+      <!-- Pending bookings alert -->
+      <div id="pendingAlert"></div>
+      <!-- Recent bookings -->
+      <div class="data-table-wrap mb-4">
+        <div class="table-header">
+          <h6><i class="bi bi-clock-history me-2"></i>Recent Booking Requests</h6>
+          <button class="btn btn-outline-primary btn-sm" onclick="showSec('bookings')">View All</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>User</th><th>Property</th><th>District</th><th>Rent/Mo</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="recentBookingsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Recent payments -->
+      <div class="data-table-wrap">
+        <div class="table-header"><h6><i class="bi bi-credit-card me-2"></i>Recent Payments</h6></div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Txn ID</th><th>User</th><th>Property</th><th>Amount</th><th>Method</th><th>Date</th></tr></thead>
+            <tbody id="recentPaymentsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BOOKING REQUESTS ===== -->
+    <div id="sec-bookings" style="display:none">
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <button class="btn btn-sm btn-outline-primary" onclick="filterBookings('all')"    id="bf-all"    >All</button>
+        <button class="btn btn-sm btn-warning"          onclick="filterBookings('Pending')"  id="bf-Pending" style="color:#fff">⏳ Pending</button>
+        <button class="btn btn-sm btn-success"          onclick="filterBookings('Approved')" id="bf-Approved">✅ Approved</button>
+        <button class="btn btn-sm btn-danger"           onclick="filterBookings('Rejected')" id="bf-Rejected">❌ Rejected</button>
+      </div>
+      <div id="bookingCards"></div>
+    </div>
+
+    <!-- ===== PROPERTIES ===== -->
+    <div id="sec-properties" style="display:none">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h6 class="fw-bold mb-0"><i class="bi bi-buildings me-2"></i>All Properties</h6>
+        <button class="btn btn-primary btn-sm" onclick="openPropModal()"><i class="bi bi-plus-lg me-1"></i>Add Property</button>
+      </div>
+      <div class="data-table-wrap">
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>#</th><th>Name</th><th>District</th><th>Type</th><th>Rent</th><th>Status</th><th>Approved</th><th>Actions</th></tr></thead>
+            <tbody id="propsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== USERS ===== -->
+    <div id="sec-users" style="display:none">
+      <div class="data-table-wrap">
+        <div class="table-header"><h6><i class="bi bi-people me-2"></i>Registered Users</h6></div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>District</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="usersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAYMENTS ===== -->
+    <div id="sec-payments" style="display:none">
+      <div class="data-table-wrap">
+        <div class="table-header"><h6><i class="bi bi-credit-card me-2"></i>All Payment Records</h6></div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Txn ID</th><th>User</th><th>Property</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="allPaymentsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== DISTRICTS ===== -->
+    <div id="sec-districts" style="display:none">
+      <div class="chart-card">
+        <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-primary"></i>All 38 Tamil Nadu Districts</h6>
+        <div class="d-flex flex-wrap gap-2" id="districtList"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD/EDIT PROPERTY MODAL -->
+<div class="modal fade" id="propModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="propModalTitle">Add Property</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="propForm">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Property Name *</label>
+              <input type="text" class="form-control" id="pName" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Type *</label>
+              <select class="form-select" id="pType" required></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Furnishing *</label>
+              <select class="form-select" id="pFurnish">
+                <option>Fully Furnished</option><option>Semi Furnished</option><option>Unfurnished</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">District *</label>
+              <select class="form-select" id="pDistrict" required></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">City *</label>
+              <input type="text" class="form-control" id="pCity" required/>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Full Address *</label>
+              <input type="text" class="form-control" id="pAddress" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Monthly Rent (₹) *</label>
+              <input type="number" class="form-control" id="pRent" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Security Deposit (₹) *</label>
+              <input type="number" class="form-control" id="pDeposit" required/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Bedrooms</label>
+              <input type="number" class="form-control" id="pBed" min="1" value="1"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Bathrooms</label>
+              <input type="number" class="form-control" id="pBath" min="1" value="1"/>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Parking</label>
+              <select class="form-select" id="pParking"><option value="1">Yes</option><option value="0">No</option></select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Internet</label>
+              <select class="form-select" id="pInternet"><option value="1">Yes</option><option value="0">No</option></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="pStatus"><option>Available</option><option>Rented</option></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Approved</label>
+              <select class="form-select" id="pApproved"><option value="1">Approved</option><option value="0">Pending</option></select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Image URL</label>
+              <input type="text" class="form-control" id="pImg" placeholder="https://..."/>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="pDesc" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Nearby Places <small class="text-muted">(Name|Type|Distance, comma separated)</small></label>
+              <textarea class="form-control" id="pNearby" rows="2" placeholder="Anna University|College|0.5km, Apollo Hospital|Hospital|1km"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveProp()"><i class="bi bi-check-lg me-1"></i>Save Property</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.requireAdmin();
+  populateSelect('pType', PROPERTY_TYPES, 'Select Type');
+  populateSelect('pDistrict', TN_DISTRICTS, 'Select District');
+  renderOverview();
+  updatePendingBadge();
+});
+
+// ---- PENDING BADGE ----
+function updatePendingBadge() {
+  const count = DB.get('bookings').filter(b => b.status === 'Pending').length;
+  document.getElementById('pendingBadge').textContent = count || '';
+}
+
+// ---- SECTION NAV ----
+const SECS = ['overview','bookings','properties','users','payments','districts'];
+function showSec(name) {
+  SECS.forEach(s => {
+    document.getElementById('sec-' + s).style.display = 'none';
+    const n = document.getElementById('nav-' + s);
+    if (n) n.classList.remove('active');
+  });
+  document.getElementById('sec-' + name).style.display = 'block';
+  const n = document.getElementById('nav-' + name);
+  if (n) n.classList.add('active');
+
+  const titles = { overview:'Overview', bookings:'Booking Requests', properties:'Properties', users:'Users', payments:'Payments', districts:'Districts' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+
+  if (name === 'bookings')   renderBookings('all');
+  if (name === 'properties') renderProps();
+  if (name === 'users')      renderUsers();
+  if (name === 'payments')   renderAllPayments();
+  if (name === 'districts')  renderDistricts();
+}
+
+// ---- OVERVIEW ----
+function renderOverview() {
+  const props    = DB.get('properties');
+  const users    = DB.get('users');
+  const bookings = DB.get('bookings');
+  const payments = DB.get('payments');
+  const pending  = bookings.filter(b => b.status === 'Pending').length;
+  const revenue  = payments.reduce((s,p) => s + p.amount, 0);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(37,99,235,0.1)"><i class="bi bi-buildings" style="color:#2563eb;font-size:22px"></i></div>
+        <div class="info"><h3>${props.length}</h3><p>Properties</p></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(16,185,129,0.1)"><i class="bi bi-house-check" style="color:#10b981;font-size:22px"></i></div>
+        <div class="info"><h3>${props.filter(p=>p.status==='Available').length}</h3><p>Available</p></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(139,92,246,0.1)"><i class="bi bi-people" style="color:#8b5cf6;font-size:22px"></i></div>
+        <div class="info"><h3>${users.length}</h3><p>Users</p></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(245,158,11,0.1)"><i class="bi bi-calendar-check" style="color:#f59e0b;font-size:22px"></i></div>
+        <div class="info"><h3>${bookings.length}</h3><p>Bookings</p></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(239,68,68,0.1)"><i class="bi bi-hourglass-split" style="color:#ef4444;font-size:22px"></i></div>
+        <div class="info"><h3>${pending}</h3><p>Pending</p></div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-2">
+      <div class="stat-card">
+        <div class="icon" style="background:rgba(16,185,129,0.1)"><i class="bi bi-currency-rupee" style="color:#10b981;font-size:22px"></i></div>
+        <div class="info"><h3>₹${(revenue/1000).toFixed(0)}K</h3><p>Revenue</p></div>
+      </div>
+    </div>
+  `;
+
+  // Pending alert
+  if (pending > 0) {
+    document.getElementById('pendingAlert').innerHTML = `
+      <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
+        <span><i class="bi bi-hourglass-split me-2"></i><strong>${pending} booking request(s)</strong> are waiting for your approval.</span>
+        <button class="btn btn-warning btn-sm" onclick="showSec('bookings')">Review Now →</button>
+      </div>`;
+  }
+
+  // Recent bookings
+  const recent = DB.get('bookings').filter(b => b.ownerStatus === 'Approved').reverse().slice(0, 6);
+  const rtbody = document.getElementById('recentBookingsTbody');
+  rtbody.innerHTML = recent.length ? recent.map(b => `<tr>
+    <td>${b.userName || getUserName(b.userId)}</td>
+    <td>${b.propertyName}</td>
+    <td>${getPropertyDistrict(b.propertyId)}</td>
+    <td>${formatINR(b.rentPerMonth)}</td>
+    <td>${b.bookingDate}</td>
+    <td>${statusBadge(b.status)}</td>
+    <td>${b.status === 'Pending' ? `<button class="btn btn-success btn-sm me-1" onclick="approveBooking(${b.id})">✅ Approve</button><button class="btn btn-danger btn-sm" onclick="rejectBooking(${b.id})">❌ Reject</button>` : '—'}</td>
+  </tr>`).join('') : '<tr><td colspan="7" class="text-center py-3 text-muted">No bookings yet</td></tr>';
+
+  // Recent payments
+  const rp = DB.get('payments').reverse().slice(0, 5);
+  const rpbody = document.getElementById('recentPaymentsTbody');
+  rpbody.innerHTML = rp.length ? rp.map(p => `<tr>
+    <td><code>${p.id}</code></td>
+    <td>${getUserName(p.userId)}</td>
+    <td>${p.description}</td>
+    <td class="text-success fw-bold">${formatINR(p.amount)}</td>
+    <td>${p.method}</td>
+    <td>${p.date}</td>
+  </tr>`).join('') : '<tr><td colspan="6" class="text-center py-3 text-muted">No payments yet</td></tr>';
+}
+
+// ---- HELPERS ----
+function getUserName(uid) {
+  const u = DB.getById('users', uid);
+  return u ? u.name : 'Unknown';
+}
+function getPropertyDistrict(pid) {
+  const p = DB.getById('properties', pid);
+  return p ? p.district : 'N/A';
+}
+
+function statusBadge(s) {
+  const map = { Pending:'avail-pending', Approved:'avail-yes', Rejected:'avail-no', Cancelled:'avail-no' };
+  const lbl = { Pending:'⏳ Pending', Approved:'✅ Approved', Rejected:'❌ Rejected', Cancelled:'🚫 Cancelled' };
+  return `<span class="avail-badge ${map[s]||'avail-pending'}">${lbl[s]||s}</span>`;
+}
+
+// ---- APPROVE / REJECT BOOKING ----
+function approveBooking(id) {
+  DB.update('bookings', id, { status: 'Approved' });
+  // Mark property as Rented
+  const b = DB.getById('bookings', id);
+  if (b) DB.update('properties', b.propertyId, { status: 'Rented' });
+  showToast('Booking approved! ✅');
+  renderOverview();
+  updatePendingBadge();
+  if (document.getElementById('sec-bookings').style.display !== 'none') renderBookings(currentFilter);
+}
+
+function rejectBooking(id) {
+  if (!confirm('Reject this booking request?')) return;
+  DB.update('bookings', id, { status: 'Rejected' });
+  showToast('Booking rejected.', 'error');
+  renderOverview();
+  updatePendingBadge();
+  if (document.getElementById('sec-bookings').style.display !== 'none') renderBookings(currentFilter);
+}
+
+// ---- BOOKINGS TAB ----
+let currentFilter = 'all';
+function filterBookings(f) {
+  currentFilter = f;
+  renderBookings(f);
+}
+
+function renderBookings(filter) {
+  currentFilter = filter;
+  let bookings = DB.get('bookings').filter(b => b.ownerStatus === 'Approved').reverse();
+  if (filter !== 'all') bookings = bookings.filter(b => b.status === filter);
+
+  const container = document.getElementById('bookingCards');
+  if (!bookings.length) {
+    container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-calendar-x" style="font-size:48px"></i><p class="mt-2">No bookings found</p></div>';
+    return;
+  }
+
+  container.innerHTML = bookings.map(b => {
+    const prop = DB.getById('properties', b.propertyId);
+    const user = DB.getById('users', b.userId);
+    return `
+    <div class="data-table-wrap mb-3 p-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+          <h6 class="fw-bold mb-1">${b.propertyName}</h6>
+          <small class="text-muted">
+            <i class="bi bi-person me-1"></i>${user ? user.name : 'User'} &bull;
+            <i class="bi bi-geo-alt me-1"></i>${prop ? prop.district : 'N/A'} &bull;
+            <i class="bi bi-calendar me-1"></i>Submitted: ${b.bookingDate} &bull;
+            Move-in: ${b.startDate} &bull; ${b.duration} months
+          </small>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          ${statusBadge(b.status)}
+          <span class="avail-badge ${b.paymentStatus==='Paid'?'avail-yes':'avail-pending'}">${b.paymentStatus==='Paid'?'✅ Paid':'⏳ Payment Pending'}</span>
+        </div>
+      </div>
+      <div class="row g-2 mb-2" style="font-size:13px">
+        <div class="col-md-3"><span class="text-muted">Rent/Month:</span> <strong>${formatINR(b.rentPerMonth)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">Deposit:</span> <strong>${formatINR(b.deposit||0)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">Total:</span> <strong>${formatINR(b.totalAmount)}</strong></div>
+        <div class="col-md-3"><span class="text-muted">User Phone:</span> <strong>${user ? user.phone : 'N/A'}</strong></div>
+      </div>
+      ${b.status === 'Pending' ? `
+      <div class="alert alert-warning mb-2 py-2 px-3" style="font-size:13px">
+        <i class="bi bi-hourglass-split me-1"></i>This booking is waiting for your approval.
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" onclick="approveBooking(${b.id})"><i class="bi bi-check-circle me-1"></i>Approve Booking</button>
+        <button class="btn btn-danger btn-sm"  onclick="rejectBooking(${b.id})"><i class="bi bi-x-circle me-1"></i>Reject</button>
+      </div>` : ''}
+      ${b.status === 'Approved' ? '<div class="alert alert-success mb-0 py-2 px-3" style="font-size:13px"><i class="bi bi-check-circle me-1"></i>Approved — Waiting for user payment.</div>' : ''}
+      ${b.status === 'Rejected' ? '<div class="alert alert-danger mb-0 py-2 px-3" style="font-size:13px"><i class="bi bi-x-circle me-1"></i>This booking has been rejected.</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- PROPERTIES ----
+function renderProps() {
+  const props = DB.get('properties');
+  document.getElementById('propsTbody').innerHTML = props.map((p,i) => `<tr>
+    <td>${i+1}</td>
+    <td><strong>${p.name}</strong></td>
+    <td>${p.district}</td>
+    <td><span class="badge bg-secondary">${p.type}</span></td>
+    <td>${formatINR(p.rent)}/mo</td>
+    <td><span class="avail-badge ${p.status==='Available'?'avail-yes':'avail-no'}">${p.status}</span></td>
+    <td><span class="avail-badge ${p.approved?'avail-yes':'avail-pending'}">${p.approved?'✅ Approved':'⏳ Pending'}</span></td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="editProp(${p.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-outline-success me-1" onclick="toggleApprove(${p.id},${p.approved})">${p.approved?'Unapprove':'Approve'}</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteProp(${p.id})"><i class="bi bi-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function toggleApprove(id, current) {
+  DB.update('properties', id, { approved: !current });
+  renderProps();
+  showToast(current ? 'Property unapproved' : 'Property approved ✅');
+}
+
+function deleteProp(id) {
+  if (!confirm('Delete this property?')) return;
+  DB.remove('properties', id);
+  renderProps();
+  showToast('Property deleted', 'error');
+}
+
+// ---- PROP MODAL ----
+let editingPropId = null;
+function openPropModal(prop = null) {
+  editingPropId = prop ? prop.id : null;
+  document.getElementById('propModalTitle').textContent = prop ? 'Edit Property' : 'Add Property';
+  if (prop) {
+    document.getElementById('pName').value    = prop.name;
+    document.getElementById('pType').value    = prop.type;
+    document.getElementById('pFurnish').value = prop.furnished;
+    document.getElementById('pDistrict').value= prop.district;
+    document.getElementById('pCity').value    = prop.city || '';
+    document.getElementById('pAddress').value = prop.address;
+    document.getElementById('pRent').value    = prop.rent;
+    document.getElementById('pDeposit').value = prop.deposit;
+    document.getElementById('pBed').value     = prop.bedrooms;
+    document.getElementById('pBath').value    = prop.bathrooms;
+    document.getElementById('pParking').value = prop.parking ? '1' : '0';
+    document.getElementById('pInternet').value= prop.internet ? '1' : '0';
+    document.getElementById('pStatus').value  = prop.status;
+    document.getElementById('pApproved').value= prop.approved ? '1' : '0';
+    document.getElementById('pImg').value     = prop.images[0] || '';
+    document.getElementById('pDesc').value    = prop.description;
+    document.getElementById('pNearby').value  = (prop.nearby||[]).map(n=>`${n.name}|${n.type}|${n.dist}`).join(', ');
+  } else {
+    document.getElementById('propForm').reset();
+  }
+  new bootstrap.Modal(document.getElementById('propModal')).show();
+}
+
+function editProp(id) { openPropModal(DB.getById('properties', id)); }
+
+function saveProp() {
+  const nearby = document.getElementById('pNearby').value.trim()
+    .split(',').filter(Boolean).map(s => {
+      const [name, type, dist] = s.split('|').map(x=>x.trim());
+      return { name: name||'', type: type||'', dist: dist||'' };
+    });
+
+  const data = {
+    name:        document.getElementById('pName').value.trim(),
+    type:        document.getElementById('pType').value,
+    furnished:   document.getElementById('pFurnish').value,
+    district:    document.getElementById('pDistrict').value,
+    city:        document.getElementById('pCity').value.trim(),
+    address:     document.getElementById('pAddress').value.trim(),
+    rent:        parseInt(document.getElementById('pRent').value),
+    deposit:     parseInt(document.getElementById('pDeposit').value),
+    bedrooms:    parseInt(document.getElementById('pBed').value),
+    bathrooms:   parseInt(document.getElementById('pBath').value),
+    parking:     document.getElementById('pParking').value === '1',
+    internet:    document.getElementById('pInternet').value === '1',
+    water:       true,
+    electricity: true,
+    status:      document.getElementById('pStatus').value,
+    approved:    document.getElementById('pApproved').value === '1',
+    images:      [document.getElementById('pImg').value || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80'],
+    description: document.getElementById('pDesc').value.trim(),
+    nearby,
+    ownerId: 1, rating: 0, reviews: 0,
+    createdAt: new Date().toLocaleDateString('en-IN')
+  };
+
+  if (!data.name || !data.district || !data.rent) { showToast('Fill required fields', 'error'); return; }
+
+  if (editingPropId) {
+    DB.update('properties', editingPropId, data);
+    showToast('Property updated ✅');
+  } else {
+    data.id = Date.now();
+    DB.add('properties', data);
+    showToast('Property added ✅');
+  }
+
+  bootstrap.Modal.getInstance(document.getElementById('propModal')).hide();
+  renderProps();
+  renderOverview();
+}
+
+// ---- USERS ----
+function renderUsers() {
+  const users = DB.get('users');
+  document.getElementById('usersTbody').innerHTML = users.map((u,i) => `<tr>
+    <td>${i+1}</td>
+    <td><strong>${u.name}</strong></td>
+    <td>${u.email}</td>
+    <td>${u.phone||'N/A'}</td>
+    <td>${u.district||'N/A'}</td>
+    <td>${u.joinDate||'N/A'}</td>
+    <td><span class="avail-badge ${u.status==='Blocked'?'avail-no':'avail-yes'}">${u.status||'Active'}</span></td>
+    <td>
+      <button class="btn btn-sm ${u.status==='Blocked'?'btn-outline-success':'btn-outline-warning'} me-1" onclick="toggleBlock(${u.id},'${u.status||'Active'}')">${u.status==='Blocked'?'Unblock':'Block'}</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${u.id})"><i class="bi bi-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function toggleBlock(id, status) {
+  DB.update('users', id, { status: status === 'Blocked' ? 'Active' : 'Blocked' });
+  renderUsers();
+  showToast('User status updated');
+}
+
+function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  DB.remove('users', id);
+  renderUsers();
+  showToast('User deleted', 'error');
+}
+
+// ---- PAYMENTS ----
+function renderAllPayments() {
+  const payments = DB.get('payments').reverse();
+  const tbody = document.getElementById('allPaymentsTbody');
+  tbody.innerHTML = payments.length ? payments.map(p => `<tr>
+    <td><code>${p.id}</code></td>
+    <td>${getUserName(p.userId)}</td>
+    <td>${p.description}</td>
+    <td class="text-success fw-bold">${formatINR(p.amount)}</td>
+    <td>${p.method}</td>
+    <td>${p.date}</td>
+    <td><span class="avail-badge avail-yes">✅ ${p.status}</span></td>
+  </tr>`).join('') : '<tr><td colspan="7" class="text-center py-3 text-muted">No payments yet</td></tr>';
+}
+
+// ---- DISTRICTS ----
+function renderDistricts() {
+  const props = DB.get('properties');
+  document.getElementById('districtList').innerHTML = TN_DISTRICTS.map(d => {
+    const count = props.filter(p => p.district === d && p.status === 'Available').length;
+    return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:8px">
+      <i class="bi bi-geo-alt text-primary"></i><span>${d}</span>
+      <span style="background:${count>0?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.1)'};color:${count>0?'#059669':'#dc2626'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">${count} available</span>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

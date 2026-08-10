@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Register — House Rental System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);min-height:100vh;padding:40px 0">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="form-card">
+        <div class="form-header">
+          <i class="bi bi-building-add" style="font-size:40px;color:#f59e0b;display:block;margin-bottom:12px"></i>
+          <h2>Owner Registration</h2>
+          <p>Register to list your properties on House Rental System</p>
+        </div>
+        <div class="form-body">
+          <div id="alertBox"></div>
+          <form id="ownerRegForm" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name *</label>
+                <input type="text" class="form-control" id="oName" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone *</label>
+                <input type="tel" class="form-control" id="oPhone" maxlength="10" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-control" id="oEmail" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">District *</label>
+                <select class="form-select" id="oDistrict" required></select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" id="oAddress"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Password *</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="oPassword" required/>
+                  <button type="button" class="input-group-text" onclick="tp('oPassword','oi')"><i class="bi bi-eye-slash" id="oi"></i></button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Confirm Password *</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="oCPassword" required/>
+                  <button type="button" class="input-group-text" onclick="tp('oCPassword','ci')"><i class="bi bi-eye-slash" id="ci"></i></button>
+                </div>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                  <i class="bi bi-person-check me-2"></i>Register as Owner
+                </button>
+              </div>
+            </div>
+          </form>
+          <div class="text-center mt-3">
+            <p style="font-size:13px;color:#64748b">Already registered? <a href="login.html" style="color:#2563eb;font-weight:600">Login here</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => { populateSelect('oDistrict', TN_DISTRICTS, 'Select District'); });
+
+function tp(id, icoId) {
+  const f = document.getElementById(id);
+  const i = document.getElementById(icoId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+document.getElementById('ownerRegForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const name     = document.getElementById('oName').value.trim();
+  const phone    = document.getElementById('oPhone').value.trim();
+  const email    = document.getElementById('oEmail').value.trim();
+  const district = document.getElementById('oDistrict').value;
+  const address  = document.getElementById('oAddress').value.trim();
+  const password = document.getElementById('oPassword').value;
+  const cpass    = document.getElementById('oCPassword').value;
+  const al       = document.getElementById('alertBox');
+
+  if (!name || !phone || !email || !district || !password) { al.innerHTML = '<div class="alert alert-danger">Please fill all required fields.</div>'; return; }
+  if (!/^\d{10}$/.test(phone))  { al.innerHTML = '<div class="alert alert-danger">Enter valid 10-digit phone.</div>'; return; }
+  if (password.length < 6)      { al.innerHTML = '<div class="alert alert-danger">Password must be at least 6 characters.</div>'; return; }
+  if (password !== cpass)       { al.innerHTML = '<div class="alert alert-danger">Passwords do not match.</div>'; return; }
+
+  const owners = DB.get('owners');
+  if (owners.find(o => o.email === email)) { al.innerHTML = '<div class="alert alert-danger">Email already registered.</div>'; return; }
+
+  const newOwner = { id: Date.now(), name, phone, email, password, district, address, approved: false, joinDate: new Date().toLocaleDateString('en-IN') };
+  DB.add('owners', newOwner);
+  Auth.setOwner(newOwner);
+  showToast('Registration successful! Awaiting admin approval.');
+  setTimeout(() => window.location.href = 'login.html', 1200);
+});
+</script>
+</body>
+</html>

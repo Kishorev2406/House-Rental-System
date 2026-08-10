@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Dashboard — House Rental System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .district-card {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      height: 100%;
+    }
+    .district-card:hover { border-color: #2563eb; background: rgba(37,99,235,0.04); transform: translateY(-3px); }
+    .district-card.active { border-color: #2563eb; background: rgba(37,99,235,0.08); }
+    .district-card h6 { font-size: 13px; font-weight: 700; color: #0f172a; margin: 8px 0 4px; }
+    .district-card small { font-size: 11px; color: #64748b; }
+    .district-card .count { font-size: 20px; font-weight: 800; color: #2563eb; }
+    .house-card {
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border: 1px solid #e2e8f0;
+      transition: all 0.25s;
+      height: 100%;
+    }
+    .house-card:hover { transform: translateY(-5px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+    .house-card img { width: 100%; height: 200px; object-fit: cover; }
+    .house-card .hc-body { padding: 16px; }
+    .house-card .hc-price { font-size: 20px; font-weight: 800; color: #2563eb; }
+    .house-card .hc-title { font-size: 15px; font-weight: 700; color: #0f172a; margin: 6px 0 4px; }
+    .house-card .hc-addr { font-size: 12px; color: #64748b; }
+    .house-card .hc-feats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+    .house-card .hc-feats span { font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px; }
+    .avail-badge { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; }
+    .avail-yes { background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); }
+    .avail-no  { background: rgba(239,68,68,0.12);  color: #dc2626; border: 1px solid rgba(239,68,68,0.3);  }
+    .avail-pending { background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
+    .status-timeline { display: flex; align-items: center; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+    .status-step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .status-step .dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+    .status-step .dot.done  { background: #10b981; color: #fff; }
+    .status-step .dot.active{ background: #2563eb; color: #fff; }
+    .status-step .dot.wait  { background: #e2e8f0; color: #94a3b8; }
+    .status-step small { font-size: 10px; color: #64748b; text-align: center; max-width: 60px; }
+    .status-line { height: 2px; width: 40px; background: #e2e8f0; margin-bottom: 16px; }
+    .status-line.done { background: #10b981; }
+    .filter-bar { background: #fff; border-radius: 12px; padding: 16px 20px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <i class="bi bi-house-heart-fill" style="color:#f59e0b;font-size:24px"></i>
+      <h4>House <span>Rental System</span></h4>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebarAvatar">U</div>
+      <div>
+        <h6 id="sidebarName">User</h6>
+        <p id="sidebarDistrict">Tenant</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <a href="#" onclick="showTab('overview')" id="nav-overview" class="active">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="#" onclick="showTab('houses')" id="nav-houses">
+        <i class="bi bi-buildings"></i> Houses by District
+      </a>
+      <div class="nav-section">My Account</div>
+      <a href="#" onclick="showTab('bookings')" id="nav-bookings">
+        <i class="bi bi-calendar-check"></i> My Bookings
+        <span class="badge-count" id="bookingBadge">0</span>
+      </a>
+      <a href="#" onclick="showTab('payments')" id="nav-payments">
+        <i class="bi bi-credit-card"></i> Payment History
+      </a>
+      <a href="#" onclick="showTab('profile')" id="nav-profile">
+        <i class="bi bi-person-circle"></i> My Profile
+      </a>
+      <a href="#" onclick="showTab('password')" id="nav-password">
+        <i class="bi bi-shield-lock"></i> Change Password
+      </a>
+      <div class="nav-section">Other</div>
+      <a href="index.html"><i class="bi bi-house"></i> Back to Site</a>
+      <a href="#" onclick="Auth.logoutUser()" style="color:#ef4444">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <h4 id="pageTitle">Dashboard</h4>
+        <p id="pageSubtitle" class="text-muted" style="font-size:13px;margin:0"></p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button id="darkModeBtn" class="btn btn-sm" style="background:#fff;border:1px solid #e2e8f0;width:36px;height:36px;padding:0;border-radius:8px"></button>
+        <button class="btn btn-sm d-lg-none" id="sidebarToggle" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px">
+          <i class="bi bi-list" style="font-size:18px"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== OVERVIEW TAB ===================== -->
+    <div id="tab-overview">
+      <!-- WELCOME BANNER -->
+      <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:16px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-20px;top:-20px;width:150px;height:150px;background:rgba(245,158,11,0.08);border-radius:50%"></div>
+        <h4 style="color:#fff;font-weight:800;margin:0 0 6px">Welcome back, <span style="color:#f59e0b" id="welcomeName">User</span>! 👋</h4>
+        <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0">Find your perfect rental home across Tamil Nadu</p>
+        <button class="btn btn-secondary btn-sm mt-3" onclick="showTab('houses')">
+          <i class="bi bi-search me-1"></i>Browse Houses by District
+        </button>
+      </div>
+
+      <!-- STATS -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(37,99,235,0.1)"><i class="bi bi-calendar-check" style="color:#2563eb;font-size:22px"></i></div>
+            <div class="info"><h3 id="statBookings">0</h3><p>My Bookings</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(16,185,129,0.1)"><i class="bi bi-credit-card" style="color:#10b981;font-size:22px"></i></div>
+            <div class="info"><h3 id="statPayments">0</h3><p>Payments Made</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(245,158,11,0.1)"><i class="bi bi-house-check" style="color:#f59e0b;font-size:22px"></i></div>
+            <div class="info"><h3 id="statAvail">0</h3><p>Available Houses</p></div>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="stat-card">
+            <div class="icon" style="background:rgba(139,92,246,0.1)"><i class="bi bi-geo-alt" style="color:#8b5cf6;font-size:22px"></i></div>
+            <div class="info"><h3>38</h3><p>Districts</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY RECENT BOOKINGS STATUS -->
+      <div class="data-table-wrap mb-4">
+        <div class="table-header">
+          <h6><i class="bi bi-calendar-check me-2"></i>My Booking Status</h6>
+          <button class="btn btn-outline-primary btn-sm" onclick="showTab('bookings')">View All</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>District</th>
+                <th>Rent/Month</th>
+                <th>Booking Date</th>
+                <th>Approval Status</th>
+                <th>Payment</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="overviewBookings"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- QUICK DISTRICT BROWSE -->
+      <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill me-2 text-primary"></i>Quick Browse by District</h6>
+      <div class="row g-2" id="quickDistrictGrid"></div>
+    </div>
+
+    <!-- ===================== HOUSES BY DISTRICT TAB ===================== -->
+    <div id="tab-houses" style="display:none">
+      <div class="row g-4">
+        <!-- District Selector -->
+        <div class="col-lg-3">
+          <div class="chart-card" style="position:sticky;top:20px;max-height:80vh;overflow-y:auto">
+            <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-primary"></i>Select District</h6>
+            <input type="text" class="form-control form-control-sm mb-3" id="districtSearch" placeholder="Search district..." oninput="filterDistrictList()"/>
+            <div id="districtListSidebar"></div>
+          </div>
+        </div>
+
+        <!-- Houses Panel -->
+        <div class="col-lg-9">
+          <!-- District Info Header -->
+          <div id="districtHeader" style="display:none;background:linear-gradient(135deg,#0f172a,#1e3a5f);border-radius:14px;padding:20px 24px;margin-bottom:20px">
+            <h5 style="color:#fff;font-weight:800;margin:0 0 4px" id="selectedDistrictName">Select a District</h5>
+            <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0" id="selectedDistrictCount"></p>
+          </div>
+
+          <!-- DEFAULT: Show all districts prompt -->
+          <div id="selectDistrictPrompt" class="text-center py-5">
+            <i class="bi bi-geo-alt" style="font-size:56px;color:#e2e8f0"></i>
+            <h5 class="mt-3" style="color:#64748b">Select a District</h5>
+            <p style="color:#94a3b8;font-size:13px">Choose any district from the left to see available rental houses</p>
+          </div>
+
+          <!-- Filters -->
+          <div id="houseFilters" class="filter-bar" style="display:none">
+            <div class="row g-2 align-items-center">
+              <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" id="filterType" onchange="renderHouses()">
+                  <option value="">All Types</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-3">
+                <select class="form-select form-select-sm" id="filterFurnish" onchange="renderHouses()">
+                  <option value="">All Furnishing</option>
+                  <option>Fully Furnished</option>
+                  <option>Semi Furnished</option>
+                  <option>Unfurnished</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <input type="number" class="form-control form-control-sm" id="filterMin" placeholder="Min ₹" oninput="renderHouses()"/>
+              </div>
+              <div class="col-6 col-md-2">
+                <input type="number" class="form-control form-control-sm" id="filterMax" placeholder="Max ₹" oninput="renderHouses()"/>
+              </div>
+              <div class="col-md-2">
+                <select class="form-select form-select-sm" id="filterAvail" onchange="renderHouses()">
+                  <option value="">All Status</option>
+                  <option value="Available">Available Only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Houses Grid -->
+          <div class="row g-3" id="housesGrid"></div>
+          <div id="noHousesMsg" style="display:none" class="text-center py-5">
+            <i class="bi bi-house-x" style="font-size:48px;color:#e2e8f0"></i>
+            <h6 class="mt-3" style="color:#64748b">No houses found</h6>
+            <p style="font-size:13px;color:#94a3b8">Try changing filters or select another district</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== BOOKINGS TAB ===================== -->
+    <div id="tab-bookings" style="display:none">
+      <div class="data-table-wrap">
+        <div class="table-header">
+          <h6><i class="bi bi-calendar-check me-2"></i>My Booking History</h6>
+        </div>
+        <div id="bookingCards" class="p-3"></div>
+      </div>
+    </div>
+
+    <!-- ===================== PAYMENTS TAB ===================== -->
+    <div id="tab-payments" style="display:none">
+      <div class="data-table-wrap">
+        <div class="table-header">
+          <h6><i class="bi bi-credit-card me-2"></i>Payment History</h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Txn ID</th><th>Description</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="paymentsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PROFILE TAB ===================== -->
+    <div id="tab-profile" style="display:none">
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="chart-card">
+            <h6 class="fw-bold mb-4"><i class="bi bi-person-circle me-2"></i>Edit My Profile</h6>
+            <div id="profileAlert"></div>
+            <form id="profileForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" id="pName"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Username</label>
+                  <input type="text" class="form-control" id="pUsername"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Email (Read Only)</label>
+                  <input type="email" class="form-control" id="pEmail" readonly style="background:#f8fafc"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Phone</label>
+                  <input type="tel" class="form-control" id="pPhone" maxlength="10"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Gender</label>
+                  <select class="form-select" id="pGender">
+                    <option>Male</option><option>Female</option><option>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Date of Birth</label>
+                  <input type="date" class="form-control" id="pDob"/>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">District</label>
+                  <select class="form-select" id="pDistrict"></select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">City</label>
+                  <input type="text" class="form-control" id="pCity"/>
+                </div>
+                <div class="col-12">
+                  <label class="form-label">Address</label>
+                  <input type="text" class="form-control" id="pAddress"/>
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+          <div class="chart-card">
+            <h6 class="fw-bold mb-3">Account Summary</h6>
+            <div id="accountInfo"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PASSWORD TAB ===================== -->
+    <div id="tab-password" style="display:none">
+      <div class="row">
+        <div class="col-lg-5">
+          <div class="chart-card">
+            <h6 class="fw-bold mb-4"><i class="bi bi-shield-lock me-2"></i>Change Password</h6>
+            <div id="pwdAlert"></div>
+            <form id="pwdForm">
+              <div class="mb-3">
+                <label class="form-label">Current Password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="oldPwd" placeholder="Current password"/>
+                  <button type="button" class="input-group-text" onclick="togglePwd('oldPwd','oi')"><i class="bi bi-eye-slash" id="oi"></i></button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">New Password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="newPwd" placeholder="Min 6 characters"/>
+                  <button type="button" class="input-group-text" onclick="togglePwd('newPwd','ni')"><i class="bi bi-eye-slash" id="ni"></i></button>
+                </div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label">Confirm New Password</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" id="confPwd" placeholder="Re-enter new password"/>
+                  <button type="button" class="input-group-text" onclick="togglePwd('confPwd','ci')"><i class="bi bi-eye-slash" id="ci"></i></button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-shield-check me-2"></i>Update Password
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- HOUSE DETAIL MODAL -->
+<div class="modal fade" id="houseModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="houseModalTitle">House Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="houseModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="bookNowBtn" onclick="submitBooking()">
+          <i class="bi bi-calendar-plus me-2"></i>Book This House
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+let currentUser, selectedDistrictName = '', selectedHouseId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.requireUser();
+  currentUser = Auth.getUser();
+
+  document.getElementById('sidebarName').textContent = currentUser.name;
+  document.getElementById('sidebarAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('sidebarDistrict').textContent = currentUser.district || 'Tenant';
+  document.getElementById('welcomeName').textContent = currentUser.name.split(' ')[0];
+
+  populateSelect('pDistrict', TN_DISTRICTS, 'Select District');
+  populateSelect('filterType', PROPERTY_TYPES, 'All Types');
+
+  loadStats();
+  loadOverviewBookings();
+  loadQuickDistricts();
+  buildDistrictSidebar();
+  loadProfile();
+});
+
+// ---- STATS ----
+function loadStats() {
+  const myBookings = DB.get('bookings').filter(b => b.userId === currentUser.id);
+  const myPayments = DB.get('payments').filter(p => p.userId === currentUser.id);
+  const availHouses = DB.get('properties').filter(p => p.approved && p.status === 'Available');
+
+  document.getElementById('statBookings').textContent = myBookings.length;
+  document.getElementById('statPayments').textContent = myPayments.length;
+  document.getElementById('statAvail').textContent = availHouses.length;
+  document.getElementById('bookingBadge').textContent = myBookings.length || '';
+}
+
+// ---- OVERVIEW BOOKINGS ----
+function loadOverviewBookings() {
+  const bookings = DB.get('bookings').filter(b => b.userId === currentUser.id).reverse().slice(0, 5);
+  const tbody = document.getElementById('overviewBookings');
+  if (!bookings.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No bookings yet. Browse houses by district to book.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = bookings.map(b => {
+    const prop = DB.getById('properties', b.propertyId);
+    return `<tr>
+      <td><strong>${b.propertyName}</strong></td>
+      <td>${prop ? prop.district : 'N/A'}</td>
+      <td>${formatINR(b.rentPerMonth)}/mo</td>
+      <td>${b.bookingDate}</td>
+      <td>${statusBadge(b.status)}</td>
+      <td>${payBadge(b.paymentStatus)}</td>
+      <td>
+        ${b.status === 'Approved' && b.paymentStatus !== 'Paid'
+          ? `<a href="payment.html?bookingId=${b.id}" class="btn btn-success btn-sm">Pay Now</a>`
+          : `<span class="text-muted" style="font-size:12px">${b.status === 'Pending' ? 'Awaiting Admin' : '—'}</span>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function statusBadge(s) {
+  const map = { Pending:'avail-pending', Approved:'avail-yes', Rejected:'avail-no', Cancelled:'avail-no' };
+  const icons = { Pending:'⏳ Pending Admin Approval', Approved:'✅ Approved', Rejected:'❌ Rejected', Cancelled:'🚫 Cancelled' };
+  return `<span class="avail-badge ${map[s]||'avail-pending'}">${icons[s]||s}</span>`;
+}
+
+function payBadge(s) {
+  return s === 'Paid'
+    ? '<span class="avail-badge avail-yes">✅ Paid</span>'
+    : '<span class="avail-badge avail-pending">⏳ Pending</span>';
+}
+
+// ---- QUICK DISTRICT GRID ----
+function loadQuickDistricts() {
+  const allProps = DB.get('properties').filter(p => p.approved);
+  const grid = document.getElementById('quickDistrictGrid');
+  // Count available houses per district
+  const districtCounts = {};
+  allProps.forEach(p => {
+    if (!districtCounts[p.district]) districtCounts[p.district] = { total: 0, available: 0 };
+    districtCounts[p.district].total++;
+    if (p.status === 'Available') districtCounts[p.district].available++;
+  });
+
+  const icons = ['🏙️','🌆','🌇','🌃','🌉','🌁'];
+  const topDistricts = Object.keys(districtCounts).slice(0, 12);
+  grid.innerHTML = topDistricts.map((d, i) => `
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+      <div class="district-card" onclick="selectDistrict('${d}')">
+        <div style="font-size:28px">${icons[i % icons.length]}</div>
+        <h6>${d}</h6>
+        <div class="count">${districtCounts[d].available}</div>
+        <small>available houses</small>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- DISTRICT SIDEBAR ----
+function buildDistrictSidebar() {
+  const allProps = DB.get('properties').filter(p => p.approved);
+  const districtCounts = {};
+  TN_DISTRICTS.forEach(d => districtCounts[d] = { total: 0, available: 0 });
+  allProps.forEach(p => {
+    if (districtCounts[p.district]) {
+      districtCounts[p.district].total++;
+      if (p.status === 'Available') districtCounts[p.district].available++;
+    }
+  });
+
+  const container = document.getElementById('districtListSidebar');
+  container.innerHTML = TN_DISTRICTS.map(d => `
+    <div class="d-flex justify-content-between align-items-center py-2 px-2 rounded mb-1 district-list-item"
+      style="cursor:pointer;transition:background 0.15s;font-size:13px"
+      id="ditem-${d.replace(/\s/g,'')}"
+      onclick="selectDistrict('${d}')"
+      onmouseover="this.style.background='rgba(37,99,235,0.06)'"
+      onmouseout="if(!this.classList.contains('active'))this.style.background='transparent'">
+      <span><i class="bi bi-geo-alt me-1 text-primary"></i>${d}</span>
+      <span style="background:${districtCounts[d].available>0?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.1)'};color:${districtCounts[d].available>0?'#059669':'#dc2626'};padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">${districtCounts[d].available}</span>
+    </div>
+  `).join('');
+}
+
+function filterDistrictList() {
+  const q = document.getElementById('districtSearch').value.toLowerCase();
+  document.querySelectorAll('.district-list-item').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+}
+
+// ---- SELECT DISTRICT & SHOW HOUSES ----
+function selectDistrict(districtName) {
+  selectedDistrictName = districtName;
+  showTab('houses');
+
+  // Highlight in sidebar
+  document.querySelectorAll('.district-list-item').forEach(el => {
+    el.classList.remove('active');
+    el.style.background = 'transparent';
+  });
+  const item = document.getElementById('ditem-' + districtName.replace(/\s/g,''));
+  if (item) { item.classList.add('active'); item.style.background = 'rgba(37,99,235,0.08)'; }
+
+  document.getElementById('selectDistrictPrompt').style.display = 'none';
+  document.getElementById('houseFilters').style.display = 'block';
+  document.getElementById('districtHeader').style.display = 'block';
+  document.getElementById('selectedDistrictName').textContent = '📍 ' + districtName;
+
+  renderHouses();
+}
+
+// ---- RENDER HOUSES ----
+function renderHouses() {
+  if (!selectedDistrictName) return;
+
+  const type    = document.getElementById('filterType').value;
+  const furnish = document.getElementById('filterFurnish').value;
+  const minR    = parseInt(document.getElementById('filterMin').value) || 0;
+  const maxR    = parseInt(document.getElementById('filterMax').value) || Infinity;
+  const avail   = document.getElementById('filterAvail').value;
+
+  let houses = DB.get('properties').filter(p => {
+    if (!p.approved) return false;
+    if (p.district !== selectedDistrictName) return false;
+    if (type    && p.type      !== type)    return false;
+    if (furnish && p.furnished !== furnish) return false;
+    if (p.rent < minR || p.rent > maxR)    return false;
+    if (avail === 'Available' && p.status !== 'Available') return false;
+    return true;
+  });
+
+  document.getElementById('selectedDistrictCount').textContent =
+    `${houses.length} properties found — ${houses.filter(h=>h.status==='Available').length} available`;
+
+  const grid = document.getElementById('housesGrid');
+  const noMsg = document.getElementById('noHousesMsg');
+
+  if (!houses.length) {
+    grid.innerHTML = '';
+    noMsg.style.display = 'block';
+    return;
+  }
+  noMsg.style.display = 'none';
+
+  grid.innerHTML = houses.map(h => {
+    const isAvail = h.status === 'Available';
+    // Check if current user already booked this house
+    const userBooked = DB.get('bookings').some(b => b.userId === currentUser.id && b.propertyId === h.id && b.status !== 'Rejected');
+    return `
+    <div class="col-md-6 col-xl-4">
+      <div class="house-card">
+        <div style="position:relative">
+          <img src="${h.images[0]}" alt="${h.name}" onerror="this.src='https://via.placeholder.com/400x200?text=House'"/>
+          <div style="position:absolute;top:10px;left:10px">
+            <span class="avail-badge ${isAvail?'avail-yes':'avail-no'}">
+              ${isAvail ? '✅ Available' : '❌ Already Booked'}
+            </span>
+          </div>
+          ${userBooked ? '<div style="position:absolute;top:10px;right:10px"><span class="avail-badge avail-pending">📋 You Booked</span></div>' : ''}
+        </div>
+        <div class="hc-body">
+          <div class="hc-price">${formatINR(h.rent)}<span style="font-size:13px;font-weight:400;color:#64748b">/month</span></div>
+          <h5 class="hc-title">${h.name}</h5>
+          <p class="hc-addr"><i class="bi bi-geo-alt me-1"></i>${h.address}</p>
+          <div class="hc-feats">
+            <span><i class="bi bi-door-open"></i>${h.bedrooms} Bed</span>
+            <span><i class="bi bi-droplet"></i>${h.bathrooms} Bath</span>
+            <span><i class="bi bi-tag"></i>${h.furnished}</span>
+            ${h.parking ? '<span><i class="bi bi-p-circle"></i>Parking</span>' : ''}
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm flex-fill" onclick="viewHouseDetail(${h.id})">
+              <i class="bi bi-eye me-1"></i>View Details
+            </button>
+            ${isAvail && !userBooked
+              ? `<button class="btn btn-primary btn-sm flex-fill" onclick="openBookingModal(${h.id})">
+                  <i class="bi bi-calendar-plus me-1"></i>Book
+                 </button>`
+              : `<button class="btn btn-sm flex-fill" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;border-radius:8px" disabled>
+                  ${userBooked ? '📋 Booked' : '🚫 Unavailable'}
+                 </button>`
+            }
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---- VIEW HOUSE DETAIL MODAL ----
+function viewHouseDetail(id) {
+  const h = DB.getById('properties', id);
+  if (!h) return;
+  document.getElementById('houseModalTitle').textContent = h.name;
+  const isAvail = h.status === 'Available';
+  const userBooked = DB.get('bookings').some(b => b.userId === currentUser.id && b.propertyId === h.id && b.status !== 'Rejected');
+
+  document.getElementById('houseModalBody').innerHTML = `
+    <img src="${h.images[0]}" style="width:100%;height:220px;object-fit:cover;border-radius:10px;margin-bottom:16px"
+      onerror="this.src='https://via.placeholder.com/600x220?text=House'"/>
+    <div class="row g-3">
+      <div class="col-md-8">
+        <h5 style="font-weight:800;color:#0f172a">${h.name}</h5>
+        <p style="color:#64748b;font-size:13px"><i class="bi bi-geo-alt me-1"></i>${h.address}, ${h.city||''}, ${h.district}</p>
+        <p style="font-size:13px;color:#475569;line-height:1.8">${h.description}</p>
+        <h6 class="mt-3 mb-2" style="font-weight:700">Nearby Places</h6>
+        ${h.nearby.map(n => `<span style="display:inline-block;background:#f1f5f9;border-radius:6px;padding:4px 10px;font-size:12px;margin:3px">${n.name} (${n.dist})</span>`).join('')}
+      </div>
+      <div class="col-md-4">
+        <div style="background:#f8fafc;border-radius:10px;padding:16px">
+          <div style="font-size:24px;font-weight:800;color:#2563eb;margin-bottom:4px">${formatINR(h.rent)}<span style="font-size:13px;font-weight:400;color:#64748b">/month</span></div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:12px">Deposit: ${formatINR(h.deposit)}</div>
+          <div style="font-size:13px">
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Type</span><span>${h.type}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Bedrooms</span><span>${h.bedrooms}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Bathrooms</span><span>${h.bathrooms}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Furnishing</span><span>${h.furnished}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Parking</span><span>${h.parking?'✅ Yes':'❌ No'}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Water</span><span>${h.water?'✅ Yes':'❌ No'}</span></div>
+            <div class="d-flex justify-content-between py-1 border-bottom"><span class="text-muted">Internet</span><span>${h.internet?'✅ Yes':'❌ No'}</span></div>
+            <div class="d-flex justify-content-between py-1"><span class="text-muted">Status</span><span class="avail-badge ${isAvail?'avail-yes':'avail-no'}">${isAvail?'✅ Available':'❌ Booked'}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  selectedHouseId = id;
+  const bookBtn = document.getElementById('bookNowBtn');
+  bookBtn.style.display = isAvail && !userBooked ? 'block' : 'none';
+  new bootstrap.Modal(document.getElementById('houseModal')).show();
+}
+
+// ---- OPEN BOOKING MODAL ----
+function openBookingModal(id) {
+  const h = DB.getById('properties', id);
+  if (!h) return;
+  document.getElementById('houseModalTitle').textContent = 'Book: ' + h.name;
+  selectedHouseId = id;
+
+  document.getElementById('houseModalBody').innerHTML = `
+    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>After booking, your request will be sent to Admin for approval. You will be notified once approved.</div>
+    <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px">
+      <h6 style="font-weight:700">${h.name}</h6>
+      <p style="font-size:13px;color:#64748b;margin:0"><i class="bi bi-geo-alt me-1"></i>${h.address}, ${h.district}</p>
+      <div style="font-size:20px;font-weight:800;color:#2563eb;margin-top:8px">${formatINR(h.rent)}/month</div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Move-in Date *</label>
+        <input type="date" class="form-control" id="bookDate" min="${new Date().toISOString().split('T')[0]}" required/>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Rental Duration (months) *</label>
+        <select class="form-select" id="bookDuration">
+          <option value="3">3 Months</option>
+          <option value="6" selected>6 Months</option>
+          <option value="12">12 Months</option>
+          <option value="24">24 Months</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Message to Owner (Optional)</label>
+        <textarea class="form-control" id="bookMsg" rows="2" placeholder="Any special requirements..."></textarea>
+      </div>
+    </div>
+    <div id="bookingTotal" style="background:rgba(37,99,235,0.06);border-radius:10px;padding:14px;margin-top:14px">
+      <div class="d-flex justify-content-between mb-2"><span style="font-size:13px">Monthly Rent</span><span style="font-weight:700">${formatINR(h.rent)}</span></div>
+      <div class="d-flex justify-content-between mb-2"><span style="font-size:13px">Security Deposit</span><span style="font-weight:700">${formatINR(h.deposit)}</span></div>
+      <div class="d-flex justify-content-between"><span style="font-weight:700">Total on Move-in</span><span style="font-size:18px;font-weight:800;color:#2563eb">${formatINR(h.rent + h.deposit)}</span></div>
+    </div>
+    <div id="bookAlertBox" class="mt-3"></div>
+  `;
+  document.getElementById('bookNowBtn').style.display = 'block';
+  document.getElementById('bookNowBtn').innerHTML = '<i class="bi bi-send me-2"></i>Submit Booking Request';
+  new bootstrap.Modal(document.getElementById('houseModal')).show();
+}
+
+// ---- SUBMIT BOOKING ----
+function submitBooking() {
+  const h = DB.getById('properties', selectedHouseId);
+  if (!h) return;
+
+  const startDate = document.getElementById('bookDate')?.value;
+  const duration  = document.getElementById('bookDuration')?.value;
+
+  if (!startDate) {
+    document.getElementById('bookAlertBox').innerHTML = '<div class="alert alert-danger">Please select a move-in date.</div>';
+    return;
+  }
+
+  const booking = {
+    id: Date.now(),
+    userId: currentUser.id,
+    propertyId: h.id,
+    propertyName: h.name,
+    ownerName: h.ownerName || 'Owner',
+    bookingDate: new Date().toLocaleDateString('en-IN'),
+    startDate,
+    duration: parseInt(duration),
+    rentPerMonth: h.rent,
+    deposit: h.deposit,
+    totalAmount: h.rent * parseInt(duration) + h.deposit,
+    status: 'Pending',
+    ownerStatus: 'Pending',   // Owner must approve first
+    paymentStatus: 'Pending',
+    paymentMethod: '',
+    message: document.getElementById('bookMsg')?.value || ''
+  };
+
+  DB.add('bookings', booking);
+
+  // DON'T mark property as booked yet — wait for admin approval
+  loadStats();
+  document.getElementById('bookingBadge').textContent = DB.get('bookings').filter(b => b.userId === currentUser.id).length;
+
+  // Close modal and show success
+  bootstrap.Modal.getInstance(document.getElementById('houseModal')).hide();
+  showToast('Booking request submitted! Awaiting Admin approval. ⏳', 'info');
+  loadOverviewBookings();
+  renderHouses();
+}
+
+// ---- BOOKINGS TAB ----
+function loadBookingsTab() {
+  const bookings = DB.get('bookings').filter(b => b.userId === currentUser.id).reverse();
+  const container = document.getElementById('bookingCards');
+  if (!bookings.length) {
+    container.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-calendar-x" style="font-size:48px"></i><p class="mt-2">No bookings yet. Browse houses by district.</p></div>';
+    return;
+  }
+
+  container.innerHTML = bookings.map(b => {
+    const steps = [
+      { label:'Submitted', done: true },
+      { label:'Admin Review', done: b.status !== 'Pending', active: b.status === 'Pending' },
+      { label:'Approved', done: b.status === 'Approved', active: false },
+      { label:'Payment', done: b.paymentStatus === 'Paid', active: b.status === 'Approved' && b.paymentStatus !== 'Paid' }
+    ];
+
+    return `
+    <div style="background:#f8fafc;border-radius:12px;padding:18px;margin-bottom:14px;border:1px solid #e2e8f0">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h6 style="font-weight:700;margin:0">${b.propertyName}</h6>
+          <small class="text-muted">Booked on ${b.bookingDate} &bull; ${b.duration} months &bull; ${formatINR(b.rentPerMonth)}/mo</small>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          ${statusBadge(b.status)}
+          ${payBadge(b.paymentStatus)}
+        </div>
+      </div>
+
+      <!-- STATUS TIMELINE -->
+      <div class="status-timeline">
+        ${steps.map((s, i) => `
+          <div class="status-step">
+            <div class="dot ${s.done?'done':s.active?'active':'wait'}">${s.done?'✓':i+1}</div>
+            <small>${s.label}</small>
+          </div>
+          ${i < steps.length-1 ? `<div class="status-line ${s.done?'done':''}"></div>` : ''}
+        `).join('')}
+      </div>
+
+      ${b.status === 'Pending' ? '<div class="alert alert-warning mt-2 mb-0" style="font-size:12px;padding:8px 12px"><i class="bi bi-hourglass-split me-1"></i>Your booking request is under review by the Admin.</div>' : ''}
+      ${b.status === 'Rejected' ? '<div class="alert alert-danger mt-2 mb-0" style="font-size:12px;padding:8px 12px"><i class="bi bi-x-circle me-1"></i>Booking was rejected by Admin.</div>' : ''}
+      ${b.status === 'Approved' && b.paymentStatus !== 'Paid' ? `<div class="mt-2"><a href="payment.html?bookingId=${b.id}" class="btn btn-success btn-sm"><i class="bi bi-credit-card me-1"></i>Complete Payment</a></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ---- PAYMENTS TAB ----
+function loadPaymentsTab() {
+  const payments = DB.get('payments').filter(p => p.userId === currentUser.id).reverse();
+  const tbody = document.getElementById('paymentsTbody');
+  if (!payments.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No payment records yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = payments.map(p => `<tr>
+    <td><code>${p.id}</code></td>
+    <td>${p.description}</td>
+    <td class="text-success fw-bold">${formatINR(p.amount)}</td>
+    <td>${p.method}</td>
+    <td>${p.date}</td>
+    <td><span class="avail-badge avail-yes">✅ ${p.status}</span></td>
+  </tr>`).join('');
+}
+
+// ---- PROFILE ----
+function loadProfile() {
+  document.getElementById('pName').value     = currentUser.name || '';
+  document.getElementById('pUsername').value = currentUser.username || '';
+  document.getElementById('pEmail').value    = currentUser.email || '';
+  document.getElementById('pPhone').value    = currentUser.phone || '';
+  document.getElementById('pGender').value   = currentUser.gender || 'Male';
+  document.getElementById('pDob').value      = currentUser.dob || '';
+  document.getElementById('pDistrict').value = currentUser.district || '';
+  document.getElementById('pCity').value     = currentUser.city || '';
+  document.getElementById('pAddress').value  = currentUser.address || '';
+
+  document.getElementById('accountInfo').innerHTML = `
+    <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700">${currentUser.name.charAt(0)}</div>
+      <div><h6 class="mb-0">${currentUser.name}</h6><small class="text-muted">${currentUser.email}</small></div>
+    </div>
+    <div style="font-size:13px">
+      <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Phone</span><span>${currentUser.phone||'N/A'}</span></div>
+      <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Gender</span><span>${currentUser.gender||'N/A'}</span></div>
+      <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">District</span><span>${currentUser.district||'N/A'}</span></div>
+      <div class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted">Status</span><span class="avail-badge avail-yes">${currentUser.status||'Active'}</span></div>
+      <div class="d-flex justify-content-between py-2"><span class="text-muted">Joined</span><span>${currentUser.joinDate||'N/A'}</span></div>
+    </div>
+  `;
+}
+
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const updates = {
+    name:     document.getElementById('pName').value.trim(),
+    username: document.getElementById('pUsername').value.trim(),
+    phone:    document.getElementById('pPhone').value.trim(),
+    gender:   document.getElementById('pGender').value,
+    dob:      document.getElementById('pDob').value,
+    district: document.getElementById('pDistrict').value,
+    city:     document.getElementById('pCity').value.trim(),
+    address:  document.getElementById('pAddress').value.trim()
+  };
+  DB.update('users', currentUser.id, updates);
+  currentUser = { ...currentUser, ...updates };
+  Auth.setUser(currentUser);
+  document.getElementById('sidebarName').textContent    = currentUser.name;
+  document.getElementById('sidebarAvatar').textContent  = currentUser.name.charAt(0);
+  document.getElementById('sidebarDistrict').textContent = currentUser.district || 'Tenant';
+  document.getElementById('welcomeName').textContent    = currentUser.name.split(' ')[0];
+  document.getElementById('profileAlert').innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Profile updated successfully!</div>';
+  setTimeout(() => document.getElementById('profileAlert').innerHTML = '', 3000);
+});
+
+document.getElementById('pwdForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const oldPwd  = document.getElementById('oldPwd').value;
+  const newPwd  = document.getElementById('newPwd').value;
+  const confPwd = document.getElementById('confPwd').value;
+  const al = document.getElementById('pwdAlert');
+
+  if (oldPwd !== currentUser.password) { al.innerHTML = '<div class="alert alert-danger">Current password is incorrect.</div>'; return; }
+  if (newPwd.length < 6)               { al.innerHTML = '<div class="alert alert-danger">Password must be at least 6 characters.</div>'; return; }
+  if (newPwd !== confPwd)              { al.innerHTML = '<div class="alert alert-danger">Passwords do not match.</div>'; return; }
+
+  DB.update('users', currentUser.id, { password: newPwd });
+  currentUser.password = newPwd;
+  Auth.setUser(currentUser);
+  al.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Password updated successfully!</div>';
+  document.getElementById('pwdForm').reset();
+});
+
+function togglePwd(id, iconId) {
+  const f = document.getElementById(id);
+  const i = document.getElementById(iconId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+// ---- TAB SWITCHER ----
+const TABS = ['overview','houses','bookings','payments','profile','password'];
+function showTab(name) {
+  TABS.forEach(t => {
+    document.getElementById('tab-' + t).style.display = 'none';
+    const nav = document.getElementById('nav-' + t);
+    if (nav) nav.classList.remove('active');
+  });
+  document.getElementById('tab-' + name).style.display = 'block';
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+
+  const titles = {
+    overview: 'Dashboard', houses: 'Houses by District',
+    bookings: 'My Bookings', payments: 'Payment History',
+    profile: 'My Profile', password: 'Change Password'
+  };
+  document.getElementById('pageTitle').textContent = titles[name] || 'Dashboard';
+
+  if (name === 'bookings') loadBookingsTab();
+  if (name === 'payments') loadPaymentsTab();
+  if (name === 'profile')  loadProfile();
+}
+</script>
+</body>
+</html>

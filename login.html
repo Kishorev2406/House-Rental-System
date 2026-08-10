@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — House Rental System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 16px;
+    }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* BRAND */
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand i {
+      font-size: 48px;
+      color: #f59e0b;
+    }
+    .brand h2 {
+      color: #fff;
+      font-weight: 800;
+      font-size: 24px;
+      margin: 10px 0 4px;
+    }
+    .brand p {
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+    }
+
+    /* TAB SWITCHER */
+    .role-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 5px;
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+    .role-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      transition: all 0.25s;
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .role-tab i { font-size: 20px; }
+    .role-tab.active {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .role-tab.active.user-tab   { color: #2563eb; }
+    .role-tab.active.owner-tab  { color: #f59e0b; }
+    .role-tab.active.admin-tab  { color: #ef4444; }
+
+    /* FORM CARD */
+    .login-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 32px 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-card .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .login-card .form-control {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 9px;
+      padding: 11px 14px;
+      font-size: 14px;
+      background: #f8fafc;
+    }
+    .login-card .form-control:focus {
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .input-group .form-control { border-right: none; border-radius: 9px 0 0 9px !important; }
+    .input-group .input-group-text {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-left: none;
+      border-radius: 0 9px 9px 0;
+      cursor: pointer;
+    }
+    .input-group .form-control:focus ~ .input-group-text { border-color: #2563eb; }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn-login:hover { transform: translateY(-1px); opacity: 0.92; }
+    .btn-user  { background: linear-gradient(135deg,#2563eb,#1d4ed8); color: #fff; }
+    .btn-owner { background: linear-gradient(135deg,#f59e0b,#d97706); color: #fff; }
+    .btn-admin { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
+
+    .divider-text {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+      margin: 16px 0;
+      position: relative;
+    }
+    .divider-text::before, .divider-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    .divider-text::before { left: 0; }
+    .divider-text::after  { right: 0; }
+
+    .register-link {
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 14px;
+    }
+    .register-link a { font-weight: 600; text-decoration: none; }
+    .register-link a.user-link  { color: #2563eb; }
+    .register-link a.owner-link { color: #f59e0b; }
+
+    /* Role indicator bar */
+    .role-indicator {
+      height: 4px;
+      border-radius: 2px;
+      margin-bottom: 22px;
+      transition: background 0.3s;
+    }
+
+    /* Panel display */
+    .login-panel { display: none; }
+    .login-panel.active { display: block; }
+
+    /* Back link */
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link a:hover { color: #f59e0b; }
+
+    /* Alert */
+    .alert { border-radius: 9px; font-size: 13px; border: none; padding: 10px 14px; }
+    .alert-danger  { background: rgba(239,68,68,0.1);  color: #dc2626; }
+    .alert-success { background: rgba(16,185,129,0.1); color: #059669; }
+  </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <i class="bi bi-house-heart-fill"></i>
+    <h2>House Rental System</h2>
+    <p>Tamil Nadu's Complete Rental Management Platform</p>
+  </div>
+
+  <!-- ROLE TABS -->
+  <div class="role-tabs">
+    <button class="role-tab user-tab active" onclick="switchRole('user')">
+      <i class="bi bi-person-fill"></i> Tenant
+    </button>
+    <button class="role-tab owner-tab" onclick="switchRole('owner')">
+      <i class="bi bi-building-fill"></i> Owner
+    </button>
+    <button class="role-tab admin-tab" onclick="switchRole('admin')">
+      <i class="bi bi-shield-lock-fill"></i> Admin
+    </button>
+  </div>
+
+  <!-- LOGIN CARD -->
+  <div class="login-card">
+
+    <!-- ROLE INDICATOR BAR -->
+    <div class="role-indicator" id="roleBar" style="background:#2563eb"></div>
+
+    <!-- ===== USER LOGIN ===== -->
+    <div class="login-panel active" id="panel-user">
+      <h5 style="font-weight:800;color:#0f172a;margin-bottom:4px">Tenant Login</h5>
+      <p style="font-size:13px;color:#64748b;margin-bottom:20px">Login to browse and book rental houses</p>
+      <div id="userAlert"></div>
+      <form id="userForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Email or Username</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-person" style="color:#64748b"></i>
+            </span>
+            <input type="text" class="form-control" id="userEmail" placeholder="Enter your email or username" required/>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-lock" style="color:#64748b"></i>
+            </span>
+            <input type="password" class="form-control" id="userPassword" placeholder="Enter your password" required/>
+            <button type="button" class="input-group-text" onclick="togglePwd('userPassword','uPwdIcon')">
+              <i class="bi bi-eye-slash" id="uPwdIcon" style="color:#64748b"></i>
+            </button>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="userRemember"/>
+            <label class="form-check-label" style="font-size:12px" for="userRemember">Remember me</label>
+          </div>
+          <a href="#" style="font-size:12px;color:#2563eb;text-decoration:none">Forgot Password?</a>
+        </div>
+        <button type="submit" class="btn-login btn-user" id="userLoginBtn">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Login as Tenant
+        </button>
+      </form>
+      <div class="divider-text">New to House Rental System?</div>
+      <div class="register-link">
+        <a href="user-register.html" class="user-link"><i class="bi bi-person-plus me-1"></i>Create Tenant Account</a>
+      </div>
+    </div>
+
+    <!-- ===== OWNER LOGIN ===== -->
+    <div class="login-panel" id="panel-owner">
+      <h5 style="font-weight:800;color:#0f172a;margin-bottom:4px">Owner Login</h5>
+      <p style="font-size:13px;color:#64748b;margin-bottom:20px">Login to manage your properties and bookings</p>
+      <div id="ownerAlert"></div>
+      <form id="ownerForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Email Address</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-envelope" style="color:#64748b"></i>
+            </span>
+            <input type="text" class="form-control" id="ownerEmail" placeholder="Enter your email" required/>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-lock" style="color:#64748b"></i>
+            </span>
+            <input type="password" class="form-control" id="ownerPassword" placeholder="Enter your password" required/>
+            <button type="button" class="input-group-text" onclick="togglePwd('ownerPassword','oPwdIcon')">
+              <i class="bi bi-eye-slash" id="oPwdIcon" style="color:#64748b"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-login btn-owner" id="ownerLoginBtn">
+          <i class="bi bi-building me-2"></i>Login as Owner
+        </button>
+      </form>
+      <div class="divider-text">Don't have an owner account?</div>
+      <div class="register-link">
+        <a href="owner-register.html" class="owner-link"><i class="bi bi-building-add me-1"></i>Register as Owner</a>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN LOGIN ===== -->
+    <div class="login-panel" id="panel-admin">
+      <h5 style="font-weight:800;color:#0f172a;margin-bottom:4px">Admin Login</h5>
+      <p style="font-size:13px;color:#64748b;margin-bottom:20px">Secure access to system administration</p>
+      <div id="adminAlert"></div>
+      <form id="adminForm" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Admin Username</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-shield-lock" style="color:#64748b"></i>
+            </span>
+            <input type="text" class="form-control" id="adminUsername" placeholder="Enter admin username" required/>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-right:none;border-radius:9px 0 0 9px;background:#f8fafc;border:1.5px solid #e2e8f0">
+              <i class="bi bi-lock" style="color:#64748b"></i>
+            </span>
+            <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" required/>
+            <button type="button" class="input-group-text" onclick="togglePwd('adminPassword','aPwdIcon')">
+              <i class="bi bi-eye-slash" id="aPwdIcon" style="color:#64748b"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-login btn-admin" id="adminLoginBtn">
+          <i class="bi bi-shield-check me-2"></i>Login as Admin
+        </button>
+      </form>
+    </div>
+
+  </div><!-- end login-card -->
+
+  <!-- BACK LINK -->
+  <div class="back-link">
+    <a href="index.html"><i class="bi bi-arrow-left me-1"></i>Back to Home</a>
+  </div>
+
+</div><!-- end login-wrapper -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // If already logged in redirect
+  if (Auth.getUser())  window.location.href = 'user-dashboard.html';
+  if (Auth.getOwner()) window.location.href = 'owner-dashboard.html';
+  if (Auth.getAdmin()) window.location.href = 'admin-dashboard.html';
+});
+
+// ---- ROLE SWITCHER ----
+function switchRole(role) {
+  // Hide all panels
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+
+  // Show selected
+  document.getElementById('panel-' + role).classList.add('active');
+  document.querySelector('.' + role + '-tab').classList.add('active');
+
+  // Update indicator bar color
+  const colors = { user:'#2563eb', owner:'#f59e0b', admin:'#ef4444' };
+  document.getElementById('roleBar').style.background = colors[role];
+
+  // Clear all alerts
+  ['userAlert','ownerAlert','adminAlert'].forEach(id => document.getElementById(id).innerHTML = '');
+}
+
+// ---- TOGGLE PASSWORD ----
+function togglePwd(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById(iconId);
+  input.type  = input.type === 'password' ? 'text' : 'password';
+  icon.className = input.type === 'password' ? 'bi bi-eye-slash' : 'bi bi-eye';
+  icon.style.color = '#64748b';
+}
+
+// ---- USER LOGIN ----
+document.getElementById('userForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const email    = document.getElementById('userEmail').value.trim();
+  const password = document.getElementById('userPassword').value;
+  const btn      = document.getElementById('userLoginBtn');
+  const alert    = document.getElementById('userAlert');
+
+  if (!email || !password) {
+    alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>Please fill in all fields.</div>';
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+  btn.disabled  = true;
+
+  setTimeout(() => {
+    const users = DB.get('users');
+    const user  = users.find(u => (u.email === email || u.username === email) && u.password === password);
+
+    if (user) {
+      if (user.status === 'Blocked') {
+        alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-slash-circle me-2"></i>Your account has been blocked. Contact admin.</div>';
+        btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login as Tenant';
+        btn.disabled  = false;
+        return;
+      }
+      Auth.setUser(user);
+      showToast('Welcome, ' + user.name + '! 🎉');
+      setTimeout(() => window.location.href = 'user-dashboard.html', 800);
+    } else {
+      alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>Invalid email or password.</div>';
+      btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login as Tenant';
+      btn.disabled  = false;
+    }
+  }, 600);
+});
+
+// ---- OWNER LOGIN ----
+document.getElementById('ownerForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const email    = document.getElementById('ownerEmail').value.trim();
+  const password = document.getElementById('ownerPassword').value;
+  const btn      = document.getElementById('ownerLoginBtn');
+  const alert    = document.getElementById('ownerAlert');
+
+  if (!email || !password) {
+    alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>Please fill in all fields.</div>';
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+  btn.disabled  = true;
+
+  setTimeout(() => {
+    const owners = DB.get('owners');
+    const owner  = owners.find(o => o.email === email && o.password === password);
+
+    if (owner) {
+      Auth.setOwner(owner);
+      showToast('Welcome, ' + owner.name + '! 🏠');
+      setTimeout(() => window.location.href = 'owner-dashboard.html', 800);
+    } else {
+      alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>Invalid email or password.</div>';
+      btn.innerHTML = '<i class="bi bi-building me-2"></i>Login as Owner';
+      btn.disabled  = false;
+    }
+  }, 600);
+});
+
+// ---- ADMIN LOGIN ----
+document.getElementById('adminForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('adminUsername').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const btn      = document.getElementById('adminLoginBtn');
+  const alert    = document.getElementById('adminAlert');
+
+  if (!username || !password) {
+    alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>Please fill in all fields.</div>';
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Authenticating...';
+  btn.disabled  = true;
+
+  setTimeout(() => {
+    const ADMIN_USER = '117';
+    const ADMIN_PASS = '2406';
+
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+      const adminObj = { id:1, username:'117', name:'System Admin' };
+      localStorage.setItem('hrms_admin', JSON.stringify(adminObj));
+      Auth.setAdmin(adminObj);
+      showToast('Admin login successful! 🔐');
+      setTimeout(() => window.location.href = 'admin-dashboard.html', 800);
+    } else {
+      alert.innerHTML = '<div class="alert alert-danger"><i class="bi bi-shield-exclamation me-2"></i>Invalid admin credentials. Access denied.</div>';
+      btn.innerHTML = '<i class="bi bi-shield-check me-2"></i>Login as Admin';
+      btn.disabled  = false;
+    }
+  }, 700);
+});
+</script>
+</body>
+</html>

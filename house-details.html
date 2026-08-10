@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>House Details — House Rental System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav>
+  <a class="logo" href="index.html">🏠 <span>TN</span>Rentals</a>
+  <ul>
+    <li><a href="user-dashboard.html">← Back</a></li>
+    <li><a href="payment.html">My Payments</a></li>
+    <li><a href="#" onclick="logoutUser()">Logout</a></li>
+  </ul>
+</nav>
+
+<div id="detailContent" style="padding:20px 40px"></div>
+
+<script src="script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'user-login.html'; return; }
+
+    const id = new URLSearchParams(window.location.search).get('id');
+    const house = getHouseById(id);
+    if (!house) { document.getElementById('detailContent').innerHTML = '<p>House not found.</p>'; return; }
+
+    document.title = house.title + ' — House Rental System';
+    document.getElementById('detailContent').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+        <!-- LEFT -->
+        <div>
+          <img src="${house.img}" alt="${house.title}" style="width:100%;border-radius:12px;max-height:360px;object-fit:cover"
+            onerror="this.src='https://via.placeholder.com/800x360?text=House'"/>
+
+          <!-- TABS -->
+          <div class="tabs" style="margin-top:20px">
+            <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+            <button class="tab-btn" onclick="switchTab('nearby',this)">Nearby Places</button>
+            <button class="tab-btn" onclick="switchTab('contact',this)">Owner Info</button>
+          </div>
+
+          <!-- Overview -->
+          <div id="tab-overview" class="tab-panel active" style="background:var(--white);border-radius:10px;padding:20px;box-shadow:var(--shadow)">
+            <h3 style="color:var(--dark);margin-bottom:12px">Property Overview</h3>
+            <p style="color:#666;line-height:1.7;margin-bottom:16px">${house.description}</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="info-row"><span>Property Type</span><span>${house.type}</span></div>
+              <div class="info-row"><span>Bedrooms</span><span>${house.bedrooms}</span></div>
+              <div class="info-row"><span>Bathrooms</span><span>${house.bathrooms}</span></div>
+              <div class="info-row"><span>Area</span><span>${house.sqft} sqft</span></div>
+              <div class="info-row"><span>Furnishing</span><span>${house.furnishing}</span></div>
+              <div class="info-row"><span>District</span><span>${house.district}</span></div>
+              <div class="info-row"><span>City</span><span>${house.city}</span></div>
+              <div class="info-row"><span>Area/Locality</span><span>${house.area}</span></div>
+              <div class="info-row"><span>Availability</span>
+                <span class="badge ${house.available ? 'badge-green':'badge-red'}">${house.available ? 'Available' : 'Not Available'}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nearby -->
+          <div id="tab-nearby" class="tab-panel" style="background:var(--white);border-radius:10px;padding:20px;box-shadow:var(--shadow)">
+            <h3 style="color:var(--dark);margin-bottom:12px">Nearby Places & Amenities</h3>
+            <div style="display:grid;gap:12px">
+              ${house.nearby.map(n => `
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray);border-radius:8px">
+                  <span style="font-size:24px">${amenityIcon(n.type)}</span>
+                  <div>
+                    <strong style="font-size:14px">${n.name}</strong>
+                    <div style="font-size:12px;color:#666">${n.type} &bull; ${n.distance} away</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Owner -->
+          <div id="tab-contact" class="tab-panel" style="background:var(--white);border-radius:10px;padding:20px;box-shadow:var(--shadow)">
+            <h3 style="color:var(--dark);margin-bottom:12px">Owner / Contact Information</h3>
+            <div class="info-row"><span>Owner Name</span><span>${house.owner}</span></div>
+            <div class="info-row"><span>Phone</span><span>${house.phone}</span></div>
+            <div class="info-row"><span>Location</span><span>${house.city}, ${house.district}</span></div>
+            <div class="alert alert-info" style="margin-top:16px">
+              ℹ️ Contact the owner to schedule a visit before making payment.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="detail-info">
+          <div class="card-meta">
+            <span class="badge">${house.district}</span>
+            <span class="badge">${house.type}</span>
+            <span class="badge ${house.available ? 'badge-green':'badge-red'}">${house.available ? '✅ Available' : '❌ Booked'}</span>
+          </div>
+          <h2 style="margin-top:10px">${house.title}</h2>
+          <p style="color:#666;font-size:13px">📍 ${house.area}, ${house.city}, ${house.district}</p>
+          <div class="price-big">₹${house.rent.toLocaleString('en-IN')}<span style="font-size:14px;font-weight:400;color:#666">/month</span></div>
+          <hr class="divider"/>
+          <div class="info-row"><span>Security Deposit</span><span style="color:var(--primary);font-weight:700">₹${house.deposit.toLocaleString('en-IN')}</span></div>
+          <div class="info-row"><span>First Month Rent</span><span>₹${house.rent.toLocaleString('en-IN')}</span></div>
+          <div class="info-row"><span>Total on Move-in</span><span style="color:var(--dark);font-weight:700">₹${(house.deposit + house.rent).toLocaleString('en-IN')}</span></div>
+          <hr class="divider"/>
+          ${house.available
+            ? `<a href="payment.html?id=${house.id}" class="btn btn-primary btn-block" style="margin-bottom:10px">💳 Book Now & Pay</a>`
+            : `<button class="btn btn-block" style="background:#999;color:#fff;cursor:not-allowed" disabled>❌ Not Available</button>`
+          }
+          <a href="user-dashboard.html" class="btn btn-dark btn-block" style="margin-top:8px">← Back to Listings</a>
+          <div style="margin-top:16px;font-size:12px;color:#888;text-align:center">
+            🔒 Secure booking through House Rental System
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  function amenityIcon(type) {
+    const icons = { College:'🎓', Hospital:'🏥', School:'🏫', Company:'🏢',
+      'Bus Stop':'🚌', 'Railway Station':'🚉', Market:'🛒', Temple:'🛕', Park:'🌳', Pharmacy:'💊' };
+    return icons[type] || '📍';
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
